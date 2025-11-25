@@ -97,7 +97,7 @@
 
         <hr/>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
           <div>
             <label class="small">Aspects:</label>
             <div class="aspect-buttons">
@@ -184,22 +184,40 @@
     </footer>
   </main>
 
-  <!-- Libraries: ffmpeg.wasm & face-api.js from CDN -->
+  <!-- Libraries: using jsDelivr with defer for reliability -->
   <script defer src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.9/dist/ffmpeg.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
   <script>
   /* ================================================================
      CropXPro: client-side auto crop / batch with face detection + ffmpeg.wasm
-     Notes:
-      - Heavy features; on low-memory devices processing might fail.
-      - Uses face-api to find face center from a sampled frame.
-      - Uses ffmpeg.wasm to crop/scale/overlay. This is approximate — production server would be faster and more reliable.
+     This version ensures FFmpeg is loaded before running the main code.
   ===================================================================*/
+  (async function(){
+    // Wait for FFmpeg to be defined (defer doesn't guarantee the global ready instantly)
+    function waitForFFmpeg(timeout = 20000) {
+      return new Promise((resolve, reject) => {
+        const start = Date.now();
+        (function check(){
+          if (window.FFmpeg) return resolve();
+          if (Date.now() - start > timeout) return reject(new Error('FFmpeg did not load in time'));
+          setTimeout(check, 200);
+        })();
+      });
+    }
 
-  (function(){
+    try {
+      await waitForFFmpeg();
+      console.log('FFmpeg library is available.');
+    } catch (err) {
+      console.error('FFmpeg failed to load:', err);
+      document.getElementById('log').innerText = '❌ FFmpeg failed to load. Please check your network or try again (disable adblockers).';
+      return;
+    }
+
     const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true, corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js' });
+    // use jsDelivr core path for ffmpeg-core
+    const ffmpeg = createFFmpeg({ log: true, corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js' });
     let ffmpegLoaded = false;
     const files = []; // {file, name, id, faceBox?}
     const previews = document.getElementById('previews');
@@ -280,11 +298,11 @@
     }
     async function loadFaceModels(){
       if(!window.faceapi) return;
-      const MODEL_URL = 'https://unpkg.com/face-api.js@0.22.2/weights/';
+      // use jsDelivr weights path
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
       log('Loading face detection models (face-api).');
       try{
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        // optional extra models could be loaded for landmarks if needed
         log('Face model loaded.');
       }catch(e){ log('Warning: face-api models failed to load: '+e.message) }
     }
@@ -359,60 +377,37 @@
             // compute target dimensions based on aspect and original
             const origW = center.frameW, origH = center.frameH;
             const [aw, ah] = asp.split(':').map(Number);
-            // choose target width such that we preserve quality and not upscale dramatically
-            // Basic strategy: make crop area with same height as original if possible. We'll compute crop box centered on the detected face center.
-            // compute desired output height = original height (to preserve quality) but scale to aspect
-            // simpler: set target width = min(origW, 720 or 1080 based on quality)
             const maxW = (quality==='high')?1080:720;
-            // Determine output resolution preserving aspect ratio
             let outW = Math.min(maxW, origW);
             let outH = Math.round(outW * (ah/aw));
-            // if outH > origH, reduce outW
             if(outH > origH){
               outH = origH;
               outW = Math.round(outH * (aw/ah));
             }
 
-            // Determine crop center relative to original
             const cx = Math.round(center.x), cy = Math.round(center.y);
-            // crop width and height in source that will map to outW/outH after scaling
-            // pick crop size such that aspect matches: cropW/cropH = aw/ah, and cropW <= origW, cropH <= origH
             let cropH = Math.min(origH, Math.round(origW * (ah/aw)));
             let cropW = Math.min(origW, Math.round(cropH * (aw/ah)));
             if(cropW > origW){ cropW = origW; cropH = Math.round(cropW * (ah/aw)); }
-            // position crop so center is at cx,cy but keep inside bounds
             let x = Math.max(0, Math.min(origW - cropW, Math.round(cx - cropW/2)));
             let y = Math.max(0, Math.min(origH - cropH, Math.round(cy - cropH/2)));
 
-            // background blur overlay command if needed for vertical outputs
-            const needsBg = (aw/ah >= 1)? false : true; // vertical
-            // basic ffmpeg filters
             let vf = `crop=${cropW}:${cropH}:${x}:${y},scale=${outW}:${outH}`;
             if(enableZoomPan){
-              // static zoom enhancement: small zoom based on face size
               const zoom = 1.08;
               vf = `crop=${Math.round(cropW/zoom)}:${Math.round(cropH/zoom)}:${Math.max(0,Math.round(x+cropW*(1-1/zoom)/2))}:${Math.max(0,Math.round(y+cropH*(1-1/zoom)/2))},scale=${outW}:${outH}`;
             }
 
-            // build command: input -> possibly create blurred background and overlay
             let command = [];
+            const needsBg = (aw/ah >= 1)? false : true;
             if(needsBg && enableBgBlur){
-              // create blurred background (scale up & blur) and overlay cropped centered
-              // steps: scale input to 9:16 full, blur -> label bg; crop centred => fg; overlay
-              // For simplicity we do: scale input to outW/outH with blur (bg) then overlay the actual resized center
               const bgW = outW, bgH = outH;
               const bgFilter = `scale=${bgW}:${bgH},boxblur=10:2`;
-              // We'll create two streams: [0:v]bg and [0:v]fg
-              // Running complex filters in ffmpeg.wasm is heavy; we craft a single filtergraph
               vf = `[0:v]${bgFilter}[bg];[0:v]${vf}[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2`;
               command = ['-i', inName, '-vf', vf, '-c:a','copy','-preset','veryfast', outName];
             } else {
               command = ['-i', inName, '-vf', vf, '-c:v','libx264','-crf', quality==='high'?'18':'24', '-preset','fast','-c:a','copy', outName];
             }
-
-            // audio normalization if toggled
-            // (we keep simple: apply -af loudnorm only if normalizeBtn was 'clicked' earlier)
-            // For this sample code, we skip loudnorm for speed; production can add it
 
             log(`Running ffmpeg for ${asp} → ${outName}`);
             try{
@@ -421,25 +416,22 @@
               log('FFmpeg error: '+e.message);
             }
 
-            // read output
             try{
               const data = ffmpeg.FS('readFile', outName);
               const blob = new Blob([data.buffer], { type: 'video/mp4' });
               addPreview(outName, blob, caption);
-              // cleanup output in FS
-              ffmpeg.FS('unlink', outName);
+              try{ ffmpeg.FS('unlink', outName); }catch(e){}
             }catch(e){ log('Failed to read output: '+e.message) }
 
             doneSteps++;
             progressEl.style.width = `${Math.round((doneSteps/totalSteps)*100)}%`;
           }
 
-          // cleanup input file
           try{ ffmpeg.FS('unlink', inName); }catch(e){}
         }catch(e){
           log('Processing failed for '+item.name+': '+e.message);
         }
-      } // end files loop
+      }
 
       log('Batch finished.');
       processBtn.disabled = false;
@@ -458,7 +450,6 @@
       card.appendChild(v); card.appendChild(label); card.appendChild(dl); card.appendChild(thumbBtn);
       previews.appendChild(card);
 
-      // caption overlay isn't burned into video; user can download srt or manual overlay (future)
       if(caption && caption.trim().length){
         const cap = document.createElement('div'); cap.className='small'; cap.innerText = 'Caption: '+(caption.length>60?caption.slice(0,60)+'...':caption);
         card.appendChild(cap);
@@ -474,7 +465,6 @@
     }
 
     async function generateThumbnailFromVideo(videoElement, name){
-      // capture current frame
       const c = document.createElement('canvas');
       c.width = videoElement.videoWidth || 720;
       c.height = videoElement.videoHeight || 1280;
@@ -492,7 +482,6 @@
     downloadAllBtn.addEventListener('click', ()=>{
       const vids = previews.querySelectorAll('video');
       vids.forEach((v,i)=> {
-        // find blob url
         const src = v.src;
         const link = document.createElement('a'); link.href = src; link.download = 'cropxpro_'+i+'.mp4'; link.click();
       });
