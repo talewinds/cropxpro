@@ -4,11 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   
-  <!-- SEO & Meta Tags -->
   <title>CropXPro — Free AI Reels Maker, Splitter & Thumbnail Tool</title>
-  <meta name="description" content="All-in-one Creator Studio: Auto-crop videos for Reels/TikTok, Split videos for WhatsApp Status, and Generate Thumbnails instantly. Free, No Login, Secure." />
+  <meta name="description" content="All-in-one Creator Studio: Auto-crop videos for Reels/TikTok, Split videos for WhatsApp Status, and Generate Thumbnails instantly. Free, No Login, Secure.">
   
-  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght=400;500;700;800&family=Inter:wght=400;500;600&display=swap" rel="stylesheet">
@@ -65,25 +63,29 @@
 
     /* Ad Slots */
     .ad-slot {
-      width: 100%; max-width: 1000px; height: 100px;
+      width: 100%;
+      max-width: 1000px; height: 100px;
       background: rgba(255,255,255,0.02);
       border: 1px dashed rgba(255,255,255,0.1);
       margin: 20px 0;
       display: flex; align-items: center; justify-content: center;
       color: var(--text-muted); font-size: 12px;
       border-radius: var(--radius);
+      overflow: hidden; /* Ensure ads don't spill out */
     }
 
     /* Main Layout */
     main {
-      width: 100%; max-width: 1200px;
+      width: 100%;
+      max-width: 1200px;
       padding: 20px;
       display: grid; grid-template-columns: 1fr; gap: 20px;
     }
 
     /* Tabs */
     .tabs {
-      display: flex; gap: 10px; margin-bottom: 20px;
+      display: flex;
+      gap: 10px; margin-bottom: 20px;
       overflow-x: auto; padding-bottom: 5px;
     }
     .tab-btn {
@@ -122,9 +124,10 @@
 
     /* Components */
     .btn {
-      background: linear-gradient(135deg, var(--primary), #4338ca); /* Darker primary for gradient end */
+      background: linear-gradient(135deg, var(--primary), #4338ca);
       color: white; border: none;
-      padding: 12px 20px; border-radius: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
       font-weight: 600; cursor: pointer;
       width: 100%; margin-top: 15px;
       transition: transform 0.2s;
@@ -139,19 +142,16 @@
       cursor: pointer; transition: all 0.5s;
     }
     .upload-zone:hover { background: rgba(255,255,255,0.02); border-color: var(--primary); }
-    
-    /* Visual Feedback for Upload */
     .upload-zone.uploaded {
-      background: rgba(16, 185, 129, 0.1); /* Subtle green/teal */
-      border-color: var(--success); /* Emerald green */
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--success);
     }
-    .upload-zone.uploaded:hover {
-        background: rgba(16, 185, 129, 0.2);
-    }
+    .upload-zone.uploaded:hover { background: rgba(16, 185, 129, 0.2); }
 
     .file-item {
       display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.2); padding: 10px;
+      background: rgba(0,0,0,0.2);
+      padding: 10px;
       margin-top: 10px; border-radius: 8px;
     }
     .delete-btn {
@@ -165,13 +165,12 @@
         transition: color 0.2s;
         line-height: 1;
     }
-    .delete-btn:hover {
-        color: #f87171;
-    }
+    .delete-btn:hover { color: #f87171; }
 
     /* Thumb Tool Specific */
     .thumb-canvas-container {
-      max-width: 100%; overflow: hidden;
+      max-width: 100%;
+      overflow: hidden;
       border-radius: 8px; border: 1px solid #333;
       margin-top: 20px;
     }
@@ -186,41 +185,42 @@
 
     /* Log */
     #logArea { 
-      font-family: monospace; font-size: 11px; color: var(--text-muted); 
+      font-family: monospace;
+      font-size: 11px; color: var(--text-muted); 
       height: 100px; overflow-y: auto; background: rgba(0,0,0,0.3); 
       padding: 10px; border-radius: 8px; margin-top: 20px;
     }
     
     /* Modal Styling */
     .app-modal {
-      display: none; position:fixed; top:0; left:0; width:100%; height:100%; 
+      display: none;
+      position:fixed; top:0; left:0; width:100%; height:100%; 
       background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center;
     }
     .modal-content {
-      background:var(--surface); padding:30px; border-radius:20px; max-width:500px; 
+      background:var(--surface);
+      padding:30px; border-radius:20px; max-width:500px; 
       color:var(--text); width: 90%;
     }
     
     /* Footer */
     footer {
-      margin-top: 40px; padding: 30px; border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: 40px;
+      padding: 30px; border-top: 1px solid rgba(255,255,255,0.1);
       text-align: center; color: var(--text-muted); font-size: 13px;
     }
     
     .feature-check { margin: 8px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
     input[type="checkbox"] { accent-color: var(--secondary); transform: scale(1.2); }
 
-    .header-btns {
-      display: flex; gap: 10px;
-    }
+    .header-btns { display: flex; gap: 10px; }
     .header-btns button {
-      width: auto; padding: 8px 16px; font-size: 12px; background: #333;
+      width: auto; padding: 8px 16px; font-size: 12px;
+      background: #333;
       border-radius: 8px; font-weight: 500;
       transition: background 0.2s;
     }
-    .header-btns button:hover {
-      background: #444;
-    }
+    .header-btns button:hover { background: #444; }
   </style>
 </head>
 <body>
@@ -241,21 +241,17 @@
     </div>
   </header>
 
-  <!-- Top Ad -->
   <div class="ad-slot">
-    <!-- ADSENSE TOP BANNER HERE -->
     <span>Advertisement Space (Top Banner)</span>
   </div>
 
   <main>
-    <!-- Tool Tabs -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('cropper', event)">✂️ AI Auto-Crop</button>
       <button class="tab-btn" onclick="switchTab('splitter', event)">⏱️ Reels Splitter</button>
       <button class="tab-btn" onclick="switchTab('thumb', event)">🖼️ Thumbnail Maker</button>
     </div>
 
-    <!-- TOOL 1: AI CROPPER -->
     <div id="cropper" class="tool-section active">
       <div class="grid-layout">
         <div class="card">
@@ -295,16 +291,13 @@
         <div class="card">
           <h3>Results</h3>
           <div id="cropResults" class="preview-list"></div>
-          <!-- Side Ad -->
           <div class="ad-slot" style="height: 250px; margin-top:20px;">
-            <!-- ADSENSE SIDEBAR HERE -->
-            <span>Ad Space</span>
+             <span>Ad Space</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TOOL 2: SPLITTER -->
     <div id="splitter" class="tool-section">
       <div class="card" style="max-width: 600px; margin: 0 auto;">
         <div style="text-align:center; margin-bottom:20px;">
@@ -326,7 +319,7 @@
             <option value="60">60 Seconds (Shorts)</option>
             <option value="custom">Custom Duration...</option>
           </select>
-          <input type="number" id="customSplitDuration" placeholder="Enter duration in seconds (e.g., 10)" min="1" style="display:none; width:100%; padding:10px; margin-top:10px; background:var(--bg); color:white; border:1px solid #444; border-radius:8px; border-radius:8px;">
+          <input type="number" id="customSplitDuration" placeholder="Enter duration in seconds (e.g., 10)" min="1" style="display:none; width:100%; padding:10px; margin-top:10px; background:var(--bg); color:white; border:1px solid #444; border-radius:8px;">
         </div>
 
         <button id="startSplitBtn" class="btn" disabled>✂️ Split Video</button>
@@ -334,7 +327,6 @@
       </div>
     </div>
 
-    <!-- TOOL 3: THUMBNAIL -->
     <div id="thumb" class="tool-section">
       <div class="card" style="max-width: 600px; margin: 0 auto;">
           <div style="text-align:center; margin-bottom:20px;">
@@ -359,22 +351,20 @@
 
   </main>
 
-  <!-- MODAL: ABOUT/FEATURES -->
   <div id="aboutModal" class="app-modal">
     <div class="modal-content">
       <h3>About CropXPro</h3>
       <p>CropXPro is your free, secure, all-in-one Creator Studio for vertical video, running entirely in your browser.</p>
       <ul style="list-style-type: disc; margin-left: 20px; color: var(--text-muted);">
-        <li>**AI Auto-Crop:** Instantly converts videos to 9:16 (Reels, TikTok) with Smart Zoom (Face Detection).</li>
-        <li>**Reels Splitter:** Cut long videos into short segments (e.g., 15s, 30s) or define custom durations.</li>
-        <li>**Thumbnail Maker:** Capture high-quality, frame-accurate cover images.</li>
-        <li>**Performance:** Powered by WebAssembly (FFmpeg.wasm) for fast, local processing.</li>
+        <li><strong>AI Auto-Crop:</strong> Instantly converts videos to 9:16 (Reels, TikTok) with Smart Zoom (Face Detection).</li>
+        <li><strong>Reels Splitter:</strong> Cut long videos into short segments (e.g., 15s, 30s) or define custom durations.</li>
+        <li><strong>Thumbnail Maker:</strong> Capture high-quality, frame-accurate cover images.</li>
+        <li><strong>Performance:</strong> Powered by WebAssembly (FFmpeg.wasm) for fast, local processing.</li>
       </ul>
       <button class="btn" onclick="document.getElementById('aboutModal').style.display='none'">Got It</button>
     </div>
   </div>
 
-  <!-- MODAL: PRIVACY POLICY -->
   <div id="privacyModal" class="app-modal">
     <div class="modal-content">
       <h3>Privacy & Security</h3>
@@ -385,9 +375,7 @@
     </div>
   </div>
 
-  <!-- Bottom Ad -->
   <div class="ad-slot" style="margin: 0 auto;">
-    <!-- ADSENSE BOTTOM BANNER HERE -->
     <span>Advertisement Space (Bottom)</span>
   </div>
 
@@ -396,9 +384,8 @@
     <p style="opacity:0.5; font-size:11px;">Built for Creators. Not affiliated with Meta or Google.</p>
   </footer>
 
-  <!-- Scripts: Using FFmpeg 0.11.6 (Stable) -->
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
 
   <script>
     // --- APP LOGIC ---
@@ -440,35 +427,37 @@
       el.scrollTop = el.scrollHeight;
     };
 
-    // 3. Load Engine (FFmpeg Core Path Fix applied here)
+    // 3. Load Engine (Updated for 0.10.x stability)
     async function loadFFmpeg() {
       if(ffmpeg) return;
-      log("Loading Engine (approx 30MB)...");
+      log("Loading Engine (approx 25MB)...");
       try {
-        // FIX: Ensure the corePath matches the main script version (0.11.6)
-        ffmpeg = createFFmpeg({ log: true, corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.js' });
+        // FIXED: Using UNPKG 0.10.0 Core path which is stable
+        ffmpeg = createFFmpeg({ 
+            log: true, 
+            corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js' 
+        });
         
         ffmpeg.setProgress(({ ratio }) => {
-            // Update the log with progress
             if (ratio < 1) {
                 log(`Processing: ${(ratio * 100).toFixed(1)}%`);
             }
         });
-
+        
         await ffmpeg.load();
         log("Engine Ready ✅");
       } catch(e) {
-        log("Error loading engine. Try Chrome/Desktop or refresh.");
+        log("Error loading engine. Ensure your server has COOP/COEP headers.");
         console.error("FFmpeg Load Error:", e);
       }
     }
 
     async function loadFaceAPI() {
-      if(window.faceapi && !window.faceapi.nets.tinyFaceDetector.params) {
+      // Using @vladmandic/face-api, the net is technically faceapi.nets
+      if(faceapi && !faceapi.nets.tinyFaceDetector.params) {
         log("Loading AI Models...");
         // Load the tiny face detector model
-        // Note: face-api.js model folder must be present relative to the script
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@0.22.2/model/');
+        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/');
         log("AI Models Ready ✅");
       }
     }
@@ -575,7 +564,7 @@
             log(`Error during face detection for ${file.name}.`);
             console.error("Face API Error:", e);
             // Resolve null if any error occurs during detection
-            resolve(null); 
+            resolve(null);
           }
         };
         video.onerror = () => {
@@ -590,7 +579,6 @@
       btn.disabled = true;
       document.getElementById('cropResults').innerHTML = ''; // Clear old results
       await loadFFmpeg();
-
       if (!ffmpeg) {
         btn.disabled = false;
         return; // Stop if engine failed to load
@@ -602,10 +590,9 @@
       const aspects = Array.from(document.querySelectorAll('.aspect-opt:checked')).map(c => c.value);
       const safeMode = document.getElementById('optSafeMode').checked;
       const normalize = document.getElementById('optAudioNorm').checked;
-
+      
       for(const item of cropFiles) {
         log(`Processing ${item.file.name}...`);
-        
         // 1. Face Detect (if enabled)
         let faceX = null;
         if(zoom) {
@@ -651,9 +638,9 @@
               cropTxt = `crop=w=iw:h=min(ih, iw*(${th}/${tw})):x=0:y=(ih-oh)/2`;
           }
           filters.push(cropTxt);
-
+          
           // Safe Mode (Resize) - Resizing before crop helps with complex operations, target 720p height
-          if(safeMode) filters.push("scale=-2:720"); 
+          if(safeMode) filters.push("scale=-2:720");
           
           log(`  > Encoding ${ratio} for ${item.file.name}...`);
           
@@ -663,16 +650,16 @@
           
           // Video quality settings (CRF 28 is high compression, faster)
           args.push('-c:v', 'libx264', '-preset', 'superfast', '-crf', '28');
-
+          
           // Audio settings
           if(normalize) {
               // Loudnorm filter for audio normalization
-              args.push('-af', 'loudnorm=I=-16:TP=-1.5:LRA=11'); 
+              args.push('-af', 'loudnorm=I=-16:TP=-1.5:LRA=11');
           } else {
               args.push('-c:a', 'copy'); // Copy audio stream without re-encoding
           }
           args.push(outName);
-
+          
           try {
               await ffmpeg.run(...args);
               // Read & Display
@@ -692,6 +679,7 @@
     // --- TOOL 2: SPLITTER LOGIC ---
     const splitDrop = document.getElementById('splitDrop');
     const splitInput = document.getElementById('splitInput');
+    
     splitDrop.onclick = () => splitInput.click();
     splitInput.onchange = (e) => {
       if(e.target.files[0]) {
@@ -707,7 +695,6 @@
       btn.disabled = true;
       document.getElementById('splitResults').innerHTML = ''; // Clear old results
       await loadFFmpeg();
-
       if (!ffmpeg || !splitFile) {
         btn.disabled = false;
         return;
@@ -715,7 +702,6 @@
       
       const durationSelect = document.getElementById('splitDuration').value;
       const customDurationInput = document.getElementById('customSplitDuration');
-
       let dur = 0;
       if (durationSelect === 'custom') {
           dur = parseFloat(customDurationInput.value);
@@ -796,7 +782,7 @@
       thumbSlider.value = 0; // Reset slider
       thumbVideo.currentTime = 0; // Go to start
     };
-    
+
     thumbSlider.oninput = () => {
       // Ensure we seek only when paused or meta-loaded to prevent jumping
       if (thumbVideo.readyState >= 2) {
@@ -806,7 +792,7 @@
       const s = Math.floor(thumbVideo.currentTime%60);
       document.getElementById('thumbTime').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     };
-    
+
     thumbVideo.onseeked = () => {
         const m = Math.floor(thumbVideo.currentTime/60);
         const s = Math.floor(thumbVideo.currentTime%60);
@@ -819,10 +805,8 @@
       canvas.width = thumbVideo.videoWidth;
       canvas.height = thumbVideo.videoHeight;
       canvas.getContext('2d').drawImage(thumbVideo, 0, 0, canvas.width, canvas.height);
-      
       // Use the current timestamp in the filename
       const currentTimeFormatted = document.getElementById('thumbTime').textContent.replace(':', '-');
-
       canvas.toBlob(blob => {
         if (!blob) {
             log('Error capturing frame. Is the video fully loaded?');
@@ -860,7 +844,7 @@
       a.href = url; a.download = name; a.click();
       
       // Cleanup the object URL after download
-      setTimeout(() => URL.revokeObjectURL(url), 2000); 
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     };
 
     // Make utility functions globally accessible
