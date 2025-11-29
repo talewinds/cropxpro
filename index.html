@@ -257,6 +257,11 @@
               <label class="flex items-center gap-2 text-xs">Thickness <input id="outlineThickness" type="range" min="0" max="24" value="12" class="w-24" /></label>
             </div>
           </div>
+
+          <!-- NEW: Polish toggle -->
+          <div class="mt-2 text-sm">
+            <label class="flex items-center gap-2"><input id="polishToggle" type="checkbox" checked /> <span class="muted">Polish edges automatically (recommended)</span></label>
+          </div>
         </div>
 
         <div class="mb-4">
@@ -374,9 +379,9 @@
     </div>
   </div>
 
-  <!-- MAIN SCRIPT (unchanged behavior) -->
+  <!-- MAIN SCRIPT (unchanged behavior + postprocessing) -->
   <script>
-  /********** StickerGen AI — full script **********/
+  /********** StickerGen AI — full script with post-processing **********/
   const canvas = document.getElementById('stickerCanvas');
   const ctx = canvas.getContext('2d');
   const fileInput = document.getElementById('fileInput');
@@ -397,6 +402,7 @@
   const scaleRange = document.getElementById('scaleRange');
   const outlineToggle = document.getElementById('outlineToggle');
   const outlineThickness = document.getElementById('outlineThickness');
+  const polishToggle = document.getElementById('polishToggle');
 
   let uploadedImageBase64 = null;
   let originalImage = null;
@@ -495,47 +501,159 @@
     }
   }
 
-  // Local fallback cartoonify
-  function posterizeCanvasFromImage(img, levels = 6) {
-    const tmp = document.createElement('canvas'); tmp.width = 512; tmp.height = 512;
-    const tctx = tmp.getContext('2d'); tctx.drawImage(img, 0,0,tmp.width,tmp.height);
-    const id = tctx.getImageData(0,0,tmp.width,tmp.height);
-    for (let i=0;i<id.data.length;i+=4) for (let c=0;c<3;c++){
-      const v = id.data[i+c]; const q = Math.floor((v/255)*(levels-1)) * (255/(levels-1)); id.data[i+c] = q;
-    }
-    tctx.putImageData(id,0,0); return tmp;
-  }
-
-  function edgeDetectCanvas(srcCanvas) {
-    const w = srcCanvas.width, h = srcCanvas.height;
-    const sctx = srcCanvas.getContext('2d'); const src = sctx.getImageData(0,0,w,h);
-    const out = sctx.createImageData(w,h);
-    for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++) {
-      let sum=0;
-      for (let ky=-1;ky<=1;ky++) for (let kx=-1;kx<=1;kx++) {
-        const idx = ((y+ky)*w + (x+kx))*4; const gray = (src.data[idx]+src.data[idx+1]+src.data[idx+2])/3;
-        sum += gray * ((kx===0 && ky===0) ? -8 : 1);
+  // --------- Post-processing helpers (feather, trim, outline, shadow) ----------
+  // Simple box blur used for feathering mask (fast, approximate)
+  function boxBlurGrayImageBuffer(src, w, h, radius) {
+    if (radius < 1) return src;
+    const rs = Math.ceil(radius);
+    const tmp = new Uint8ClampedArray(src.length);
+    // horizontal pass
+    for (let y=0;y<h;y++){
+      for (let x=0;x<w;x++){
+        let sum=0, count=0;
+        const start = Math.max(0, x-rs), end = Math.min(w-1, x+rs);
+        for (let k=start;k<=end;k++){ sum += src[y*w + k]; count++; }
+        tmp[y*w + x] = Math.round(sum / count);
       }
-      const oidx = (y*w + x)*4; const val = Math.max(0, Math.min(255, Math.abs(sum)));
-      out.data[oidx] = out.data[oidx+1] = out.data[oidx+2] = 255 - val; out.data[oidx+3] = 255;
     }
-    const eCanvas = document.createElement('canvas'); eCanvas.width=w; eCanvas.height=h; eCanvas.getContext('2d').putImageData(out,0,0); return eCanvas;
+    const out = new Uint8ClampedArray(src.length);
+    // vertical pass
+    for (let x=0;x<w;x++){
+      for (let y=0;y<h;y++){
+        let sum=0, count=0;
+        const start = Math.max(0, y-rs), end = Math.min(h-1, y+rs);
+        for (let k=start;k<=end;k++){ sum += tmp[k*w + x]; count++; }
+        out[y*w + x] = Math.round(sum / count);
+      }
+    }
+    return out;
   }
 
-  async function inBrowserCartoonify(img) {
-    showStatus('Running local cartoonify...');
-    const poster = posterizeCanvasFromImage(img, 6);
-    const edges = edgeDetectCanvas(poster);
-    const out = document.createElement('canvas'); out.width = 512; out.height = 512;
-    const octx = out.getContext('2d'); octx.drawImage(poster,0,0,out.width,out.height);
-    octx.globalCompositeOperation = 'multiply'; octx.drawImage(edges,0,0,out.width,out.height); octx.globalCompositeOperation = 'source-over';
-    const id = octx.getImageData(0,0,out.width,out.height);
-    function sample(x,y){ const idx=(y*out.width+x)*4; return [id.data[idx],id.data[idx+1],id.data[idx+2]]; }
-    const c1=sample(2,2), c2=sample(out.width-3,2), c3=sample(2,out.height-3), c4=sample(out.width-3,out.height-3);
-    const bg = [(c1[0]+c2[0]+c3[0]+c4[0])/4, (c1[1]+c2[1]+c3[1]+c4[1])/4, (c1[2]+c2[2]+c3[2]+c4[2])/4];
-    for (let i=0;i<id.data.length;i+=4){ const dr=id.data[i]-bg[0], dg=id.data[i+1]-bg[1], db=id.data[i+2]-bg[2]; const dist=Math.sqrt(dr*dr+dg*dg+db*db); if (dist<90) id.data[i+3]=0; }
-    octx.putImageData(id,0,0); return out;
+  // Trim transparent border and center
+  function trimAndCenterCanvas(srcCanvas, alphaThreshold=8) {
+    const w = srcCanvas.width, h = srcCanvas.height;
+    const ctx = srcCanvas.getContext('2d');
+    const data = ctx.getImageData(0,0,w,h).data;
+    let top=h, left=w, right=0, bottom=0;
+    for (let y=0;y<h;y++){
+      for (let x=0;x<w;x++){
+        const i=(y*w+x)*4;
+        const a = data[i+3];
+        if (a > alphaThreshold) {
+          if (x<left) left=x;
+          if (x>right) right=x;
+          if (y<top) top=y;
+          if (y>bottom) bottom=y;
+        }
+      }
+    }
+    if (right < left || bottom < top) return srcCanvas;
+    const nw = right-left+1, nh = bottom-top+1;
+    const out = document.createElement('canvas'); out.width = out.height = 512;
+    const octx = out.getContext('2d');
+    const d = document.createElement('canvas'); d.width = nw; d.height = nh;
+    d.getContext('2d').putImageData(ctx.getImageData(left, top, nw, nh), 0, 0);
+    const fit = computeFitRect(nw, nh, out.width, out.height, 0.95);
+    octx.clearRect(0,0,out.width,out.height);
+    octx.drawImage(d, 0, 0, nw, nh, fit.dx, fit.dy, fit.dw, fit.dh);
+    return out;
   }
+
+  // Main post-process function: feather mask, apply alpha, add white outline + shadow
+  async function postProcessCurrentImage(opts = {}) {
+    const {
+      feather = 6,
+      outlineWidth = 10,
+      shadowBlur = 18,
+      shadowAlpha = 0.22
+    } = opts;
+
+    if (!originalImage) return;
+
+    // Step A: draw original to temp 512 canvas (fitted)
+    const tmp = document.createElement('canvas'); tmp.width = tmp.height = 512;
+    const tctx = tmp.getContext('2d');
+    tctx.clearRect(0,0,tmp.width,tmp.height);
+    const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange?.value||1));
+    tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh);
+
+    // Step B: create a grayscale mask: 0..255 (1 channel)
+    const imgd = tctx.getImageData(0,0,tmp.width,tmp.height);
+    const mask = new Uint8ClampedArray(tmp.width * tmp.height);
+    for (let i=0, p=0;i<imgd.data.length;i+=4,p++){
+      const r = imgd.data[i], g = imgd.data[i+1], b = imgd.data[i+2], a = imgd.data[i+3];
+      // prefer alpha if provided, otherwise luminance threshold
+      const lum = 0.299*r + 0.587*g + 0.114*b;
+      const keep = a > 20 && lum > 6;
+      mask[p] = keep ? 255 : 0;
+    }
+
+    // Step C: blur / feather mask
+    const blurred = boxBlurGrayImageBuffer(mask, tmp.width, tmp.height, feather);
+
+    // Step D: apply blurred mask as alpha to image
+    for (let y=0;y<tmp.height;y++){
+      for (let x=0;x<tmp.width;x++){
+        const p = (y*tmp.width + x);
+        const alpha = blurred[p];
+        const idx = p*4;
+        imgd.data[idx+3] = alpha;
+      }
+    }
+    tctx.putImageData(imgd, 0, 0);
+
+    // Step E: produce a "mask canvas" from blurred alpha for outline/shadow operations
+    const maskCanvas = document.createElement('canvas'); maskCanvas.width = tmp.width; maskCanvas.height = tmp.height;
+    const mctx = maskCanvas.getContext('2d');
+    const maskImg = mctx.createImageData(tmp.width, tmp.height);
+    for (let p=0, i=0;p<blurred.length;p++, i+=4){
+      maskImg.data[i] = blurred[p];
+      maskImg.data[i+1] = blurred[p];
+      maskImg.data[i+2] = blurred[p];
+      maskImg.data[i+3] = 255;
+    }
+    mctx.putImageData(maskImg, 0, 0);
+
+    // Step F: final canvas with shadow + outline + image
+    const final = document.createElement('canvas'); final.width = final.height = 512;
+    const fctx = final.getContext('2d');
+    fctx.clearRect(0,0,final.width,final.height);
+
+    // shadow: draw blurred mask tinted black
+    fctx.save();
+    fctx.globalAlpha = shadowAlpha;
+    fctx.filter = `blur(${shadowBlur}px)`;
+    fctx.drawImage(maskCanvas, 0, 0);
+    fctx.restore();
+
+    // white outline: draw expanded mask by drawing mask multiple times (cheap stroke)
+    if (outlineWidth > 0) {
+      fctx.save();
+      fctx.globalCompositeOperation = 'source-over';
+      fctx.fillStyle = 'white';
+      const off = Math.max(1, Math.round(outlineWidth/4));
+      for (let xo = -off; xo <= off; xo++){
+        for (let yo = -off; yo <= off; yo++){
+          fctx.drawImage(maskCanvas, xo, yo);
+        }
+      }
+      fctx.restore();
+    }
+
+    // draw processed image (with alpha)
+    fctx.drawImage(tmp, 0, 0);
+
+    // Step G: trim transparent padding and re-center
+    const trimmed = trimAndCenterCanvas(final, 8);
+
+    // Replace originalImage with processed result
+    const dataURL = trimmed.toDataURL('image/png');
+    const imgNew = new Image();
+    await new Promise((res, rej) => { imgNew.onload = res; imgNew.onerror = rej; imgNew.src = dataURL; });
+    originalImage = imgNew;
+  }
+
+  // --------- End post-processing helpers ----------
 
   async function fetchWithExponentialBackoff(url, options, maxRetries=4) {
     for (let i=0;i<maxRetries;i++) {
@@ -551,7 +669,18 @@
     if (selectedType === 'cartoon') { await generateAISticker(); } else {
       const val = selectedType === 'text' ? (stickerText.value||'').trim() : (stickerEmoji.value||'').trim();
       if (!val) { showStatus(`Please enter the ${selectedType} before generating.`, true); return; }
-      drawOverlay(selectedType); actionButtons.classList.remove('hidden'); showStatus('Sticker generated!');
+      // For overlays, draw overlay then polish (optional)
+      drawOverlay(selectedType);
+      if (polishToggle && polishToggle.checked) {
+        // build current canvas into originalImage and postprocess (keeps consistent flow)
+        const tmpImg = new Image();
+        tmpImg.src = canvas.toDataURL('image/png');
+        await new Promise((res) => { tmpImg.onload = res; });
+        originalImage = tmpImg;
+        await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:14, shadowAlpha:0.2});
+        drawPreview(originalImage);
+      }
+      actionButtons.classList.remove('hidden'); showStatus('Sticker generated!');
     }
   }
 
@@ -561,7 +690,12 @@
       try {
         const fallbackCanvas = await inBrowserCartoonify(originalImage);
         const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallbackCanvas.toDataURL('image/png'); });
-        originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready (local).');
+        originalImage = img;
+        // polish if enabled
+        if (polishToggle && polishToggle.checked) {
+          await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+        }
+        drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready (local).');
       } catch (err) { console.error(err); showStatus('Local cartoonify failed.', true); } finally { setProcessingState(false); }
       return;
     }
@@ -576,12 +710,21 @@
       const base64Data = json?.candidates?.[0]?.content?.parts?.find(p=>p.inlineData)?.inlineData?.data;
       if (!base64Data) {
         showStatus('AI returned no image. Running local fallback.', true);
-        const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden'); setProcessingState(false); return;
+        const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img;
+        if (polishToggle && polishToggle.checked) { await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22}); }
+        drawPreview(originalImage); actionButtons.classList.remove('hidden'); setProcessingState(false); return;
       }
-      const imageUrl = `data:image/png;base64,${base64Data}`; const aiImg = new Image(); await new Promise((res,rej)=>{ aiImg.onload=res; aiImg.onerror=rej; aiImg.src=imageUrl; }); originalImage = aiImg; drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready!');
+      const imageUrl = `data:image/png;base64,${base64Data}`; const aiImg = new Image(); await new Promise((res,rej)=>{ aiImg.onload=res; aiImg.onerror=rej; aiImg.src=imageUrl; });
+      originalImage = aiImg;
+      if (polishToggle && polishToggle.checked) {
+        await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+      }
+      drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready!');
     } catch (err) {
       console.error(err); showStatus('AI call failed — running local fallback.', true);
-      const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden');
+      const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img;
+      if (polishToggle && polishToggle.checked) { await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22}); }
+      drawPreview(originalImage); actionButtons.classList.remove('hidden');
     } finally { setProcessingState(false); }
   }
 
