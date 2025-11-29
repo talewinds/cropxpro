@@ -257,11 +257,6 @@
               <label class="flex items-center gap-2 text-xs">Thickness <input id="outlineThickness" type="range" min="0" max="24" value="12" class="w-24" /></label>
             </div>
           </div>
-
-          <!-- NEW: Polish toggle -->
-          <div class="mt-2 text-sm">
-            <label class="flex items-center gap-2"><input id="polishToggle" type="checkbox" checked /> <span class="muted">Polish edges automatically (recommended)</span></label>
-          </div>
         </div>
 
         <div class="mb-4">
@@ -379,9 +374,9 @@
     </div>
   </div>
 
-  <!-- MAIN SCRIPT (unchanged behavior + postprocessing) -->
+  <!-- MAIN SCRIPT: replaced with robust updated script -->
   <script>
-  /********** StickerGen AI — full script with post-processing **********/
+  /********** StickerGen AI — replacement main script (robust, fixed Generate) **********/
   const canvas = document.getElementById('stickerCanvas');
   const ctx = canvas.getContext('2d');
   const fileInput = document.getElementById('fileInput');
@@ -413,62 +408,50 @@
   const MODEL_NAME = "gemini-2.5-flash-image-preview";
   const API_URL = apiKey ? `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}` : null;
 
-  function showStatus(text, isError=false) {
+  // ---------- utility & UI helpers ----------
+  function showStatus(text, isError=false){
     statusMessage.textContent = text || "";
     statusMessage.classList.toggle('text-red-600', !!isError);
+    console.log("Status:", text);
   }
-  function setProcessingState(isProcessing) {
+  function setProcessingState(isProcessing){
     generateBtn.disabled = isProcessing || !uploadedImageBase64;
     loadingSpinner.classList.toggle('hidden', !isProcessing);
     generateIcon.classList.toggle('hidden', isProcessing);
     generateText.textContent = isProcessing ? 'Processing...' : 'Generate Sticker';
-    if (isProcessing) showStatus('Processing image...'); else if (!isProcessing) showStatus('');
+    if (isProcessing) showStatus('Processing image...');
   }
-  function isSupportedImageType(type) { return /^image\/(png|jpeg|webp)$/i.test(type); }
+  function isSupportedImageType(type){ return /^image\/(png|jpeg|webp)$/i.test(type); }
 
-  function convertToBase64(file) {
-    return new Promise((resolve, reject) => {
+  // File -> base64
+  function convertToBase64(file){
+    return new Promise((resolve,reject)=>{
       const reader = new FileReader();
       reader.onerror = () => reject(new Error('File read error'));
       reader.onload = () => {
-        const res = reader.result, c = res.indexOf(',');
-        resolve({ data: res.slice(c+1), mimeType: file.type || 'image/png' });
+        const res = reader.result;
+        const comma = res.indexOf(',');
+        resolve({ data: res.slice(comma+1), mimeType: file.type || 'image/png' });
       };
       reader.readAsDataURL(file);
     });
   }
 
-  function computeFitRect(imgW, imgH, canvasW, canvasH, scale=1) {
+  // Fit calculations & drawing helpers (unchanged logic)
+  function computeFitRect(imgW, imgH, canvasW, canvasH, scale=1){
     const ratio = Math.min((canvasW / imgW) * scale, (canvasH / imgH) * scale);
     const dw = imgW * ratio, dh = imgH * ratio;
     const dx = (canvasW - dw) / 2, dy = (canvasH - dh) / 2;
     return {dx,dy,dw,dh,ratio};
   }
-
-  function drawCheckerboard(ctx, size=16) {
+  function drawCheckerboard(ctx, size=16){
     const w = ctx.canvas.width, h = ctx.canvas.height;
-    for (let y=0;y<h;y+=size) for (let x=0;x<w;x+=size) {
+    for (let y=0;y<h;y+=size) for (let x=0;x<w;x+=size){
       ctx.fillStyle = ((Math.floor(x/size)+Math.floor(y/size))%2===0) ? '#e6edf3' : '#ffffff';
       ctx.fillRect(x,y,size,size);
     }
   }
-
-  function drawPreview(img) {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawCheckerboard(ctx);
-    const scale = parseFloat(scaleRange.value) || 1;
-    const fit = computeFitRect(img.width, img.height, canvas.width, canvas.height, scale);
-    ctx.drawImage(img, fit.dx, fit.dy, fit.dw, fit.dh);
-    if (outlineToggle.checked) {
-      ctx.save();
-      ctx.lineWidth = parseInt(outlineThickness.value || 12, 10);
-      ctx.strokeStyle = 'white';
-      roundRectStroke(ctx, fit.dx - ctx.lineWidth/2, fit.dy - ctx.lineWidth/2, fit.dw + ctx.lineWidth, fit.dh + ctx.lineWidth, 24);
-      ctx.restore();
-    }
-  }
-
-  function roundRectStroke(ctx, x, y, w, h, r=12) {
+  function roundRectStroke(ctx, x, y, w, h, r=12){
     ctx.beginPath();
     ctx.moveTo(x+r,y);
     ctx.arcTo(x+w,y,x+w,y+h,r);
@@ -478,22 +461,36 @@
     ctx.closePath();
     ctx.stroke();
   }
+  function drawPreview(img){
+    if (!img) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawCheckerboard(ctx);
+    const scale = parseFloat(scaleRange?.value) || 1;
+    const fit = computeFitRect(img.width, img.height, canvas.width, canvas.height, scale);
+    ctx.drawImage(img, fit.dx, fit.dy, fit.dw, fit.dh);
+    if (outlineToggle && outlineToggle.checked){
+      ctx.save();
+      ctx.lineWidth = parseInt(outlineThickness.value || 12, 10);
+      ctx.strokeStyle = 'white';
+      roundRectStroke(ctx, fit.dx - ctx.lineWidth/2, fit.dy - ctx.lineWidth/2, fit.dw + ctx.lineWidth, fit.dh + ctx.lineWidth, 24);
+      ctx.restore();
+    }
+  }
 
-  function drawOverlay(type) {
-    if (!originalImage) return;
+  // Overlay drawing
+  function drawOverlay(type){
+    if (!originalImage) { showStatus('No image to draw overlay on.', true); return; }
     drawPreview(originalImage);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    if (type === 'text') {
+    if (type === 'text'){
       const t = (stickerText.value || '').trim();
       if (!t) return;
       ctx.font = 'bold 60px Inter, sans-serif';
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = 'black';
-      ctx.fillStyle = 'white';
+      ctx.lineWidth = 8; ctx.strokeStyle = 'black'; ctx.fillStyle = 'white';
       ctx.strokeText(t.toUpperCase(), canvas.width/2, canvas.height * 0.88);
       ctx.fillText(t.toUpperCase(), canvas.width/2, canvas.height * 0.88);
-    } else if (type === 'emoji') {
+    } else if (type === 'emoji'){
       const e = (stickerEmoji.value || '').trim();
       if (!e) return;
       ctx.font = '110px Inter, sans-serif';
@@ -501,287 +498,350 @@
     }
   }
 
-  // --------- Post-processing helpers (feather, trim, outline, shadow) ----------
-  // Simple box blur used for feathering mask (fast, approximate)
-  function boxBlurGrayImageBuffer(src, w, h, radius) {
-    if (radius < 1) return src;
-    const rs = Math.ceil(radius);
-    const tmp = new Uint8ClampedArray(src.length);
-    // horizontal pass
-    for (let y=0;y<h;y++){
-      for (let x=0;x<w;x++){
-        let sum=0, count=0;
-        const start = Math.max(0, x-rs), end = Math.min(w-1, x+rs);
-        for (let k=start;k<=end;k++){ sum += src[y*w + k]; count++; }
-        tmp[y*w + x] = Math.round(sum / count);
-      }
+  // ---------- local cartoonify fallback (unchanged) ----------
+  function posterizeCanvasFromImage(img, levels = 6){
+    const tmp = document.createElement('canvas'); tmp.width = 512; tmp.height = 512;
+    const tctx = tmp.getContext('2d'); tctx.drawImage(img, 0,0,tmp.width,tmp.height);
+    const id = tctx.getImageData(0,0,tmp.width,tmp.height);
+    for (let i=0;i<id.data.length;i+=4) for (let c=0;c<3;c++){
+      const v = id.data[i+c]; const q = Math.floor((v/255)*(levels-1)) * (255/(levels-1)); id.data[i+c] = q;
     }
-    const out = new Uint8ClampedArray(src.length);
-    // vertical pass
-    for (let x=0;x<w;x++){
-      for (let y=0;y<h;y++){
-        let sum=0, count=0;
-        const start = Math.max(0, y-rs), end = Math.min(h-1, y+rs);
-        for (let k=start;k<=end;k++){ sum += tmp[k*w + x]; count++; }
-        out[y*w + x] = Math.round(sum / count);
-      }
-    }
-    return out;
+    tctx.putImageData(id,0,0); return tmp;
   }
-
-  // Trim transparent border and center
-  function trimAndCenterCanvas(srcCanvas, alphaThreshold=8) {
+  function edgeDetectCanvas(srcCanvas){
     const w = srcCanvas.width, h = srcCanvas.height;
-    const ctx = srcCanvas.getContext('2d');
-    const data = ctx.getImageData(0,0,w,h).data;
-    let top=h, left=w, right=0, bottom=0;
-    for (let y=0;y<h;y++){
-      for (let x=0;x<w;x++){
-        const i=(y*w+x)*4;
-        const a = data[i+3];
-        if (a > alphaThreshold) {
-          if (x<left) left=x;
-          if (x>right) right=x;
-          if (y<top) top=y;
-          if (y>bottom) bottom=y;
-        }
+    const sctx = srcCanvas.getContext('2d'); const src = sctx.getImageData(0,0,w,h);
+    const out = sctx.createImageData(w,h);
+    for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++){
+      let sum=0;
+      for (let ky=-1;ky<=1;ky++) for (let kx=-1;kx<=1;kx++){
+        const idx = ((y+ky)*w + (x+kx))*4; const gray = (src.data[idx]+src.data[idx+1]+src.data[idx+2])/3;
+        sum += gray * ((kx===0 && ky===0) ? -8 : 1);
       }
+      const oidx = (y*w + x)*4; const val = Math.max(0, Math.min(255, Math.abs(sum)));
+      out.data[oidx] = out.data[oidx+1] = out.data[oidx+2] = 255 - val; out.data[oidx+3] = 255;
     }
-    if (right < left || bottom < top) return srcCanvas;
-    const nw = right-left+1, nh = bottom-top+1;
-    const out = document.createElement('canvas'); out.width = out.height = 512;
-    const octx = out.getContext('2d');
-    const d = document.createElement('canvas'); d.width = nw; d.height = nh;
-    d.getContext('2d').putImageData(ctx.getImageData(left, top, nw, nh), 0, 0);
-    const fit = computeFitRect(nw, nh, out.width, out.height, 0.95);
-    octx.clearRect(0,0,out.width,out.height);
-    octx.drawImage(d, 0, 0, nw, nh, fit.dx, fit.dy, fit.dw, fit.dh);
-    return out;
+    const eCanvas = document.createElement('canvas'); eCanvas.width=w; eCanvas.height=h; eCanvas.getContext('2d').putImageData(out,0,0); return eCanvas;
+  }
+  async function inBrowserCartoonify(img){
+    showStatus('Running local cartoonify...');
+    const poster = posterizeCanvasFromImage(img, 6);
+    const edges = edgeDetectCanvas(poster);
+    const out = document.createElement('canvas'); out.width = 512; out.height = 512;
+    const octx = out.getContext('2d'); octx.drawImage(poster,0,0,out.width,out.height);
+    octx.globalCompositeOperation = 'multiply'; octx.drawImage(edges,0,0,out.width,out.height); octx.globalCompositeOperation = 'source-over';
+    const id = octx.getImageData(0,0,out.width,out.height);
+    function sample(x,y){ const idx=(y*out.width+x)*4; return [id.data[idx],id.data[idx+1],id.data[idx+2]]; }
+    const c1=sample(2,2), c2=sample(out.width-3,2), c3=sample(2,out.height-3), c4=sample(out.width-3,out.height-3);
+    const bg = [(c1[0]+c2[0]+c3[0]+c4[0])/4, (c1[1]+c2[1]+c3[1]+c4[1])/4, (c1[2]+c2[2]+c3[2]+c4[2])/4];
+    for (let i=0;i<id.data.length;i+=4){ const dr=id.data[i]-bg[0], dg=id.data[i+1]-bg[1], db=id.data[i+2]-bg[2]; const dist=Math.sqrt(dr*dr+dg*dg+db*db); if (dist<90) id.data[i+3]=0; }
+    octx.putImageData(id,0,0); return out;
   }
 
-  // Main post-process function: feather mask, apply alpha, add white outline + shadow
-  async function postProcessCurrentImage(opts = {}) {
-    const {
-      feather = 6,
-      outlineWidth = 10,
-      shadowBlur = 18,
-      shadowAlpha = 0.22
-    } = opts;
-
-    if (!originalImage) return;
-
-    // Step A: draw original to temp 512 canvas (fitted)
-    const tmp = document.createElement('canvas'); tmp.width = tmp.height = 512;
-    const tctx = tmp.getContext('2d');
-    tctx.clearRect(0,0,tmp.width,tmp.height);
-    const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange?.value||1));
-    tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh);
-
-    // Step B: create a grayscale mask: 0..255 (1 channel)
-    const imgd = tctx.getImageData(0,0,tmp.width,tmp.height);
-    const mask = new Uint8ClampedArray(tmp.width * tmp.height);
-    for (let i=0, p=0;i<imgd.data.length;i+=4,p++){
-      const r = imgd.data[i], g = imgd.data[i+1], b = imgd.data[i+2], a = imgd.data[i+3];
-      // prefer alpha if provided, otherwise luminance threshold
-      const lum = 0.299*r + 0.587*g + 0.114*b;
-      const keep = a > 20 && lum > 6;
-      mask[p] = keep ? 255 : 0;
-    }
-
-    // Step C: blur / feather mask
-    const blurred = boxBlurGrayImageBuffer(mask, tmp.width, tmp.height, feather);
-
-    // Step D: apply blurred mask as alpha to image
-    for (let y=0;y<tmp.height;y++){
-      for (let x=0;x<tmp.width;x++){
-        const p = (y*tmp.width + x);
-        const alpha = blurred[p];
-        const idx = p*4;
-        imgd.data[idx+3] = alpha;
-      }
-    }
-    tctx.putImageData(imgd, 0, 0);
-
-    // Step E: produce a "mask canvas" from blurred alpha for outline/shadow operations
-    const maskCanvas = document.createElement('canvas'); maskCanvas.width = tmp.width; maskCanvas.height = tmp.height;
-    const mctx = maskCanvas.getContext('2d');
-    const maskImg = mctx.createImageData(tmp.width, tmp.height);
-    for (let p=0, i=0;p<blurred.length;p++, i+=4){
-      maskImg.data[i] = blurred[p];
-      maskImg.data[i+1] = blurred[p];
-      maskImg.data[i+2] = blurred[p];
-      maskImg.data[i+3] = 255;
-    }
-    mctx.putImageData(maskImg, 0, 0);
-
-    // Step F: final canvas with shadow + outline + image
-    const final = document.createElement('canvas'); final.width = final.height = 512;
-    const fctx = final.getContext('2d');
-    fctx.clearRect(0,0,final.width,final.height);
-
-    // shadow: draw blurred mask tinted black
-    fctx.save();
-    fctx.globalAlpha = shadowAlpha;
-    fctx.filter = `blur(${shadowBlur}px)`;
-    fctx.drawImage(maskCanvas, 0, 0);
-    fctx.restore();
-
-    // white outline: draw expanded mask by drawing mask multiple times (cheap stroke)
-    if (outlineWidth > 0) {
-      fctx.save();
-      fctx.globalCompositeOperation = 'source-over';
-      fctx.fillStyle = 'white';
-      const off = Math.max(1, Math.round(outlineWidth/4));
-      for (let xo = -off; xo <= off; xo++){
-        for (let yo = -off; yo <= off; yo++){
-          fctx.drawImage(maskCanvas, xo, yo);
+  // ---------- network helper ----------
+  async function fetchWithExponentialBackoff(url, options, maxRetries=4){
+    for (let i=0;i<maxRetries;i++){
+      try {
+        const r = await fetch(url, options);
+        if (r.status === 429) {
+          await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
+          continue;
         }
+        return r;
+      } catch (e){
+        console.warn('Fetch attempt failed', e);
+        await new Promise(res => setTimeout(res, Math.pow(2, i) * 500));
       }
-      fctx.restore();
-    }
-
-    // draw processed image (with alpha)
-    fctx.drawImage(tmp, 0, 0);
-
-    // Step G: trim transparent padding and re-center
-    const trimmed = trimAndCenterCanvas(final, 8);
-
-    // Replace originalImage with processed result
-    const dataURL = trimmed.toDataURL('image/png');
-    const imgNew = new Image();
-    await new Promise((res, rej) => { imgNew.onload = res; imgNew.onerror = rej; imgNew.src = dataURL; });
-    originalImage = imgNew;
-  }
-
-  // --------- End post-processing helpers ----------
-
-  async function fetchWithExponentialBackoff(url, options, maxRetries=4) {
-    for (let i=0;i<maxRetries;i++) {
-      try { const r = await fetch(url, options); if (r.status===429){ await new Promise(res=>setTimeout(res, Math.pow(2,i)*1000)); continue } return r; } catch(e) { await new Promise(res=>setTimeout(res, Math.pow(2,i)*500)); }
     }
     throw new Error('Network error after retries');
   }
 
-  async function prepareAndGenerate() {
-    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
-    actionButtons.classList.add('hidden');
-    if (!uploadedImageBase64) { showStatus('Please upload an image first.', true); return; }
-    if (selectedType === 'cartoon') { await generateAISticker(); } else {
-      const val = selectedType === 'text' ? (stickerText.value||'').trim() : (stickerEmoji.value||'').trim();
-      if (!val) { showStatus(`Please enter the ${selectedType} before generating.`, true); return; }
-      // For overlays, draw overlay then polish (optional)
-      drawOverlay(selectedType);
-      if (polishToggle && polishToggle.checked) {
-        // build current canvas into originalImage and postprocess (keeps consistent flow)
-        const tmpImg = new Image();
-        tmpImg.src = canvas.toDataURL('image/png');
-        await new Promise((res) => { tmpImg.onload = res; });
-        originalImage = tmpImg;
-        await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:14, shadowAlpha:0.2});
-        drawPreview(originalImage);
+  // ---------- post-process functions (graceful no-op if not provided) ----------
+  async function postProcessCurrentImage(opts = {}) {
+    if (typeof window.postProcessCurrentImage === 'function') {
+      try {
+        await window.postProcessCurrentImage(opts);
+        return;
+      } catch (err) {
+        console.warn('postProcessCurrentImage failed fallback:', err);
       }
-      actionButtons.classList.remove('hidden'); showStatus('Sticker generated!');
+    }
+    return;
+  }
+
+  // ---------- core flow: prepare & generate ----------
+  async function prepareAndGenerate(){
+    try {
+      setProcessingState(true);
+      const selectedType = document.querySelector('input[name="stickerType"]:checked')?.value;
+      actionButtons.classList.add('hidden');
+
+      if (!uploadedImageBase64 || !fileInput.files || !fileInput.files[0]) {
+        showStatus('Please upload an image first.', true);
+        setProcessingState(false);
+        return;
+      }
+
+      if (!selectedType) {
+        showStatus('Select a sticker type first.', true);
+        setProcessingState(false);
+        return;
+      }
+
+      if (selectedType === 'text' || selectedType === 'emoji') {
+        const content = selectedType === 'text' ? stickerText.value.trim() : stickerEmoji.value.trim();
+        if (!content) {
+          showStatus(`Please enter the ${selectedType} before generating.`, true);
+          setProcessingState(false);
+          return;
+        }
+
+        drawOverlay(selectedType);
+
+        if (polishToggle && polishToggle.checked) {
+          const tmpImg = new Image();
+          tmpImg.src = canvas.toDataURL('image/png');
+          await new Promise((res,rej) => { tmpImg.onload = res; tmpImg.onerror = rej; });
+          originalImage = tmpImg;
+          await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:14, shadowAlpha:0.2});
+          drawPreview(originalImage);
+        }
+
+        actionButtons.classList.remove('hidden');
+        showStatus('Sticker generated!');
+        setProcessingState(false);
+        return;
+      }
+
+      if (selectedType === 'cartoon') {
+        await generateAISticker();
+        setProcessingState(false);
+        return;
+      }
+
+      showStatus('Unknown sticker type selected.', true);
+      setProcessingState(false);
+    } catch (err) {
+      console.error('prepareAndGenerate error:', err);
+      showStatus('Unexpected error. See console for details.', true);
+      setProcessingState(false);
     }
   }
 
-  async function generateAISticker() {
-    setProcessingState(true);
-    if (!API_URL) {
+  async function generateAISticker(){
+    try {
+      setProcessingState(true);
+      if (!originalImage) {
+        showStatus('No image loaded to convert. Please upload a photo first.', true);
+        setProcessingState(false);
+        return;
+      }
+
+      if (!API_URL) {
+        showStatus('No API key found — using local cartoonify fallback.');
+        try {
+          const fallbackCanvas = await inBrowserCartoonify(originalImage);
+          const img = new Image();
+          img.src = fallbackCanvas.toDataURL('image/png');
+          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+          originalImage = img;
+
+          if (polishToggle && polishToggle.checked) {
+            await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          }
+
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+          showStatus('✨ Cartoon sticker ready (local).');
+          return;
+        } catch (err) {
+          console.error('Local cartoonify failed:', err);
+          showStatus('Local cartoonify failed. See console for details.', true);
+          return;
+        } finally {
+          setProcessingState(false);
+        }
+      }
+
+      showStatus('Sending the image to AI server (if configured)...');
+      const prompt = "Convert subject into vibrant cartoon sticker. Remove background. Output transparent PNG 512x512.";
+      const payload = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: fileInput.dataset.mimeType || 'image/png', data: uploadedImageBase64 } }
+          ]
+        }],
+        generationConfig: { responseModalities: ['IMAGE'] }
+      };
+
       try {
-        const fallbackCanvas = await inBrowserCartoonify(originalImage);
-        const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallbackCanvas.toDataURL('image/png'); });
-        originalImage = img;
-        // polish if enabled
+        const res = await fetchWithExponentialBackoff(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }, 4);
+
+        if (!res.ok) {
+          const txt = await res.text().catch(()=>null);
+          console.warn('AI server response not OK', res.status, txt);
+          showStatus('AI server returned an error — using local fallback.', true);
+          const fallbackCanvas = await inBrowserCartoonify(originalImage);
+          const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+          return;
+        }
+
+        const json = await res.json();
+        const base64Data = json?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+        if (!base64Data) {
+          console.warn('AI returned no image data', json);
+          showStatus('AI did not return an image. Running local fallback.', true);
+          const fallbackCanvas = await inBrowserCartoonify(originalImage);
+          const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+          return;
+        }
+
+        const imageUrl = `data:image/png;base64,${base64Data}`;
+        const aiImg = new Image();
+        aiImg.src = imageUrl;
+        await new Promise((res,rej)=>{ aiImg.onload=res; aiImg.onerror=rej; });
+
+        originalImage = aiImg;
         if (polishToggle && polishToggle.checked) {
           await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
         }
-        drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready (local).');
-      } catch (err) { console.error(err); showStatus('Local cartoonify failed.', true); } finally { setProcessingState(false); }
-      return;
-    }
-
-    const prompt = "Convert subject into vibrant cartoon sticker. Remove background. Output transparent PNG 512x512.";
-    const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: fileInput.dataset.mimeType || 'image/png', data: uploadedImageBase64 } }] }], generationConfig: { responseModalities: ['IMAGE'] } };
-
-    try {
-      showStatus('Sending to AI server...');
-      const res = await fetchWithExponentialBackoff(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) }, 4);
-      const json = await res.json();
-      const base64Data = json?.candidates?.[0]?.content?.parts?.find(p=>p.inlineData)?.inlineData?.data;
-      if (!base64Data) {
-        showStatus('AI returned no image. Running local fallback.', true);
-        const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img;
-        if (polishToggle && polishToggle.checked) { await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22}); }
-        drawPreview(originalImage); actionButtons.classList.remove('hidden'); setProcessingState(false); return;
+        drawPreview(originalImage);
+        actionButtons.classList.remove('hidden');
+        showStatus('✨ Cartoon sticker ready!');
+      } catch (err) {
+        console.error('generateAISticker error:', err);
+        showStatus('AI call failed — running local fallback.', true);
+        try {
+          const fallbackCanvas = await inBrowserCartoonify(originalImage);
+          const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+        } catch (fbErr) {
+          console.error('fallback after AI failed:', fbErr);
+          showStatus('All generation attempts failed. See console for details.', true);
+        }
+      } finally {
+        setProcessingState(false);
       }
-      const imageUrl = `data:image/png;base64,${base64Data}`; const aiImg = new Image(); await new Promise((res,rej)=>{ aiImg.onload=res; aiImg.onerror=rej; aiImg.src=imageUrl; });
-      originalImage = aiImg;
-      if (polishToggle && polishToggle.checked) {
-        await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
-      }
-      drawPreview(originalImage); actionButtons.classList.remove('hidden'); showStatus('✨ Cartoon sticker ready!');
+
     } catch (err) {
-      console.error(err); showStatus('AI call failed — running local fallback.', true);
-      const fallback = await inBrowserCartoonify(originalImage); const img = new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; img.src=fallback.toDataURL('image/png'); }); originalImage = img;
-      if (polishToggle && polishToggle.checked) { await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22}); }
-      drawPreview(originalImage); actionButtons.classList.remove('hidden');
-    } finally { setProcessingState(false); }
+      console.error('generateAISticker outer error:', err);
+      showStatus('Unexpected error during generation. See console.', true);
+      setProcessingState(false);
+    }
   }
 
-  function buildExportCanvas() {
+  // ---------- export & sharing (unchanged logic) ----------
+  function buildExportCanvas(){
     const tmp = document.createElement('canvas'); tmp.width=512; tmp.height=512; const tctx = tmp.getContext('2d'); tctx.clearRect(0,0,tmp.width,tmp.height);
     if (originalImage) { const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange.value)||1); tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh); }
-    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+    const selectedType = document.querySelector('input[name="stickerType"]:checked')?.value;
     if (selectedType === 'text' && stickerText.value.trim()) { tctx.font='bold 60px Inter, sans-serif'; tctx.textAlign='center'; tctx.fillStyle='white'; tctx.strokeStyle='black'; tctx.lineWidth=8; tctx.strokeText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88); tctx.fillText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88); }
     else if (selectedType === 'emoji' && stickerEmoji.value.trim()) { tctx.font='110px Inter, sans-serif'; tctx.fillText(stickerEmoji.value.trim(), tmp.width * 0.82, tmp.height * 0.16); }
     return tmp;
   }
-
-  function downloadSticker() {
+  function downloadSticker(){
     const out = buildExportCanvas();
     out.toBlob(blob=>{ const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='ai-sticker.png'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showStatus('Download complete!'); }, 'image/png');
   }
-
-  async function shareSticker() {
+  async function shareSticker(){
     try {
       const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res, 'image/png'));
       const file = new File([blob], 'ai-sticker.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title:'StickerGen AI', text:'Check my sticker!' }); showStatus('Shared successfully!'); }
       else { showStatus('Sharing not supported — downloading.'); downloadSticker(); }
-    } catch (err) { console.error(err); showStatus('Share failed — downloading.', true); downloadSticker(); }
+    } catch (err) { console.error('shareSticker error', err); showStatus('Share failed — downloading.', true); downloadSticker(); }
+  }
+  async function addToPack(){
+    const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res,'image/png')); pack.push(blob); packCountEl.textContent = pack.length; showStatus('Added to pack.');
+  }
+  function clearPack(){ pack = []; packCountEl.textContent = 0; showStatus('Pack cleared.'); }
+  async function downloadPack(){
+    if (!pack.length){ showStatus('Pack empty.', true); return; }
+    showStatus('Preparing pack...');
+    const zip = new JSZip();
+    pack.forEach((b,i)=> zip.file(`sticker_${i+1}.png`, b));
+    const content = await zip.generateAsync({ type:'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a'); a.href = url; a.download = 'sticker-pack.zip'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showStatus('Pack downloaded!');
   }
 
-  async function addToPack() {
-    const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res,'image/png')); pack.push(blob); packCountEl.textContent = pack.length; showStatus('Added to pack.'); }
-  function clearPack(){ pack = []; packCountEl.textContent = 0; showStatus('Pack cleared.'); }
-  async function downloadPack(){ if (!pack.length){ showStatus('Pack empty.', true); return; } showStatus('Preparing pack...'); const zip = new JSZip(); pack.forEach((b,i)=> zip.file(`sticker_${i+1}.png`, b)); const content = await zip.generateAsync({ type:'blob' }); const url = URL.createObjectURL(content); const a=document.createElement('a'); a.href=url; a.download='sticker-pack.zip'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showStatus('Pack downloaded!'); }
-
+  // ---------- file input handling ----------
   fileInput.addEventListener('change', async (e) => {
     try {
-      const file = e.target.files?.[0]; if (!file){ fileNameDisplay.textContent='No file selected.'; uploadedImageBase64=null; generateBtn.disabled=true; ctx.clearRect(0,0,canvas.width,canvas.height); initialPrompt.classList.remove('hidden'); return; }
-      if (!isSupportedImageType(file.type)){ fileNameDisplay.textContent='Error: Only PNG, JPG, WebP supported.'; uploadedImageBase64=null; generateBtn.disabled=true; ctx.clearRect(0,0,canvas.width,canvas.height); initialPrompt.classList.remove('hidden'); return; }
-      fileNameDisplay.textContent = `File loaded: ${file.name}`; const {data, mimeType} = await convertToBase64(file); uploadedImageBase64 = data; fileInput.dataset.mimeType = mimeType;
-      const obj = URL.createObjectURL(file); const img = new Image();
-      img.onload = ()=>{ originalImage=img; drawPreview(img); URL.revokeObjectURL(obj); generateBtn.disabled=false; actionButtons.classList.add('hidden'); initialPrompt.classList.add('hidden'); showStatus('Ready to generate!'); };
-      img.onerror = ()=>{ showStatus('Error loading image.', true); URL.revokeObjectURL(obj); };
+      const file = e.target.files?.[0];
+      if (!file) {
+        fileNameDisplay.textContent = 'No file selected.';
+        uploadedImageBase64 = null;
+        generateBtn.disabled = true;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        initialPrompt.classList.remove('hidden');
+        return;
+      }
+      if (!isSupportedImageType(file.type)) {
+        fileNameDisplay.textContent = 'Error: Only PNG, JPG, WebP supported.';
+        uploadedImageBase64 = null;
+        generateBtn.disabled = true;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        initialPrompt.classList.remove('hidden');
+        showStatus('Unsupported image type.', true);
+        return;
+      }
+
+      fileNameDisplay.textContent = `File loaded: ${file.name}`;
+      const { data, mimeType } = await convertToBase64(file);
+      uploadedImageBase64 = data;
+      fileInput.dataset.mimeType = mimeType;
+
+      const obj = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{
+        originalImage = img;
+        drawPreview(img);
+        URL.revokeObjectURL(obj);
+        generateBtn.disabled = false;
+        actionButtons.classList.add('hidden');
+        initialPrompt.classList.add('hidden');
+        showStatus('Ready to generate!');
+      };
+      img.onerror = (err) => { console.error('Image load error', err); showStatus('Error loading image.', true); URL.revokeObjectURL(obj); };
       img.src = obj;
-    } catch (err) { console.error(err); showStatus('Failed to read file.', true); }
+    } catch (err) {
+      console.error('file input handler error', err);
+      showStatus('Failed to read file.', true);
+    }
   });
 
+  // ---------- controls ----------
   function updateControls(){
-    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+    const selectedType = document.querySelector('input[name="stickerType"]:checked')?.value;
     textInputGroup.classList.toggle('hidden', selectedType !== 'text');
     emojiInputGroup.classList.toggle('hidden', selectedType !== 'emoji');
     if (originalImage){ drawPreview(originalImage); actionButtons.classList.add('hidden'); }
   }
   updateControls(); generateBtn.disabled = true;
 
-  // Cookie consent simple handlers
-  function acceptCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); /* persist if desired */ }
-  function declineCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); /* disable personalized ads logic if implemented */ }
+  // cookie handlers & window exposure
+  function acceptCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); }
+  function declineCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); }
   window.acceptCookies = acceptCookies; window.declineCookies = declineCookies;
 
-  // Expose functions to onclicks
   window.prepareAndGenerate = prepareAndGenerate;
   window.downloadSticker = downloadSticker;
   window.shareSticker = shareSticker;
@@ -790,9 +850,8 @@
   window.downloadPack = downloadPack;
   window.updateControls = updateControls;
 
-  // Optionally show sticky ad small delay (non-intrusive)
+  // show sticky ad and cookie bar as before
   setTimeout(()=>{ const el=document.getElementById('stickyAd'); if (el) el.classList.remove('hidden'); }, 2500);
-  // Optionally show cookie consent (only show if not previously accepted; simple demo)
   setTimeout(()=>{ const c=document.getElementById('cookieConsent'); if (c) c.classList.remove('hidden'); }, 1000);
   </script>
 </body>
