@@ -5,28 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>StickerGen AI — Create WhatsApp & Instagram Stickers (Cartoon, Text, Emoji)</title>
 
-  <!-- Primary SEO -->
   <meta name="description" content="StickerGen AI instantly converts your photos into shareable WhatsApp & Instagram stickers — AI cartoonify with transparent PNG export, text & emoji overlays, and sticker-pack downloads. Client-side fallback ensures fast, private processing." />
   <meta name="keywords" content="sticker maker, whatsapp stickers, instagram stickers, cartoonify photo, transparent png, AI sticker, webp, sticker pack" />
   <link rel="canonical" href="https://www.example.com/" />
 
-  <!-- Open Graph -->
   <meta property="og:title" content="StickerGen AI — Create WhatsApp Stickers" />
   <meta property="og:description" content="Turn your photos into shareable cartoon stickers. Transparent PNG, text & emoji overlays, sticker packs. No image storage." />
   <meta property="og:image" content="https://www.example.com/og-image.png" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.example.com/" />
 
-  <!-- Twitter card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="StickerGen AI — Create WhatsApp Stickers" />
   <meta name="twitter:description" content="Turn photos into sticker-ready transparent PNGs with AI or client-side cartoonifier. Free and private." />
   <meta name="twitter:image" content="https://www.example.com/og-image.png" />
 
-  <!-- Robots -->
   <meta name="robots" content="index,follow" />
 
-  <!-- Structured data (JSON-LD): Organization, WebSite, Application, FAQ -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -38,19 +33,18 @@
         "logo": "https://www.example.com/logo.png",
         "sameAs": []
       },
-      {
+   
+    {
         "@type": "WebSite",
         "url": "https://www.example.com/",
         "name": "StickerGen AI",
-        "description": "Create AI cartoon stickers and text/emoji overlays for WhatsApp & Instagram."
-      },
+        "description": "Create AI cartoon stickers and text/emoji overlays for WhatsApp & Instagram."},
       {
         "@type": "SoftwareApplication",
         "name": "StickerGen AI",
         "operatingSystem": "Web",
         "applicationCategory": "GraphicsApplication",
-        "description": "Web-based sticker maker that cartoonifies photos, removes background, and exports transparent PNG stickers."
-      },
+        "description": "Web-based sticker maker that cartoonifies photos, removes background, and exports transparent PNG stickers."},
       {
         "@type": "FAQPage",
         "mainEntity": [
@@ -62,16 +56,13 @@
   }
   </script>
 
-  <!-- Fonts & Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- JSZip for sticker-pack export (NO integrity attribute to avoid blocking) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-  <!-- ===== Customized Colorful Styles (only visual changes) ===== -->
   <style>
     :root{
       --bg-1: linear-gradient(135deg,#fff7f0 0%, #f3f0ff 100%);
@@ -82,7 +73,8 @@
       --glass: rgba(255,255,255,0.6);
     }
 
-    html,body { height:100%; }
+    html,body { height:100%;
+    }
     body {
       font-family: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial;
       background: radial-gradient(circle at 10% 10%, rgba(255,107,107,0.06), transparent 10%),
@@ -93,6 +85,7 @@
       -moz-osx-font-smoothing:grayscale;
     }
 
+    /* container card */
     .card {
       background: var(--card-grad);
       border: 1px solid rgba(15,23,42,0.04);
@@ -100,7 +93,8 @@
       border-radius: 16px;
     }
 
-    header { padding: 22px 6px; margin-bottom: 8px; }
+    header { padding: 22px 6px;
+      margin-bottom: 8px; }
     header h1 {
       font-size: 2.4rem;
       letter-spacing: -0.02em;
@@ -110,8 +104,10 @@
       color: transparent;
       display:inline-block;
     }
-    header p { color: #334155; margin-top:6px; }
+    header p { color: #334155;
+      margin-top:6px; }
 
+    /* Top ad styling */
     .ad-unit {
       border-radius: 14px;
       background: linear-gradient(135deg, rgba(255,209,136,0.12), rgba(107,141,255,0.06));
@@ -119,19 +115,24 @@
       border: 1px dashed rgba(16,24,40,0.06);
     }
 
+    /* Controls column styling */
     .controls .label {
-      color: #0f172a; font-weight:600;
+      color: #0f172a;
+      font-weight:600;
     }
     input[type="file"] { background: linear-gradient(90deg,#fff,#fff); }
-    .preview-box { height: 420px; border-radius: 12px; }
+    .preview-box { height: 420px; border-radius: 12px;
+    }
 
+    /* Make buttons colorful & animated */
     .btn-primary {
       background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
       color: white;
       box-shadow: 0 8px 20px rgba(107,141,255,0.12);
       transition: transform .12s ease, box-shadow .12s ease;
     }
-    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(107,141,255,0.18); }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(107,141,255,0.18);
+    }
     .btn-accent {
       background: linear-gradient(90deg,var(--accent-3),#ffd9a8);
       color: #07203a;
@@ -140,79 +141,115 @@
     }
     .btn-accent:hover { transform: translateY(-2px); }
 
+    /* Colorful small UI elements */
     .chip {
-      display:inline-flex; align-items:center; gap:8px;
+      display:inline-flex;
+      align-items:center; gap:8px;
       background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
       border-radius: 999px; padding:6px 10px; font-weight:600; color:#0b2545;
       border: 1px solid rgba(11,37,69,0.05);
       box-shadow: 0 4px 14px rgba(11,37,69,0.04);
     }
 
-    input, select, textarea { border-radius: 10px; border: 1px solid rgba(15,23,42,0.06); padding:10px; background: rgba(255,255,255,0.9); }
-    input:focus, textarea:focus { outline: none; box-shadow: 0 6px 20px rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.4); }
+    /* Make inputs pop */
+    input, select, textarea { border-radius: 10px;
+      border: 1px solid rgba(15,23,42,0.06); padding:10px; background: rgba(255,255,255,0.9); }
+    input:focus, textarea:focus { outline: none;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.4); }
 
-    .preview-box { background: linear-gradient(180deg,#ffffff,#fbfdff); padding:14px; border: 1px solid rgba(15,23,42,0.03); }
+    /* Preview area */
+    .preview-box { background: linear-gradient(180deg,#ffffff,#fbfdff);
+      padding:14px; border: 1px solid rgba(15,23,42,0.03); }
     #stickerCanvas {
-      width:100%; height:auto; max-width:560px; max-height:560px; border-radius:12px;
+      width:100%; height:auto; max-width:560px; max-height:560px;
+      border-radius:12px;
       border: 6px solid rgba(255,255,255,0.9);
       box-shadow: 0 12px 40px rgba(15,23,42,0.06), inset 0 -2px 12px rgba(11,37,69,0.02);
       transition: transform .12s ease;
     }
 
     #stickerCanvas:hover { transform: translateY(-4px) scale(1.01); }
-    #statusMessage { min-height: 20px; color: #334155; }
-    .muted { color:#64748b; font-size:0.92rem; }
-    .action-row button { border-radius: 12px; padding:10px 12px; font-weight:700; }
-    .rounded-glow { position:relative; border-radius:14px; overflow:hidden; }
-    .rounded-glow:before { content:""; position:absolute; inset:0; background: linear-gradient(90deg, rgba(255,107,107,0.06), rgba(107,141,255,0.06)); pointer-events:none; }
-    footer .card { padding:18px; }
-    .cookie-consent { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 9999; background: linear-gradient(90deg,#ffffff,#fffaf0); border-radius: 12px; padding: 12px; display:flex; align-items:center; gap:12px; border:1px solid rgba(11,37,69,0.06); box-shadow: 0 12px 40px rgba(11,37,69,0.08); }
 
+    /* Status */
+    #statusMessage { min-height: 20px;
+      color: #334155; }
+
+    /* Fancy small text */
+    .muted { color:#64748b; font-size:0.92rem;
+    }
+
+    /* Action buttons */
+    .action-row button { border-radius: 12px; padding:10px 12px; font-weight:700;
+    }
+
+    .rounded-glow {
+      position:relative;
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .rounded-glow:before {
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(255,107,107,0.06), rgba(107,141,255,0.06));
+      pointer-events:none;
+    }
+
+    /* Footer cards */
+    footer .card { padding:18px;
+    }
+
+    /* Cookie consent styling improved */
+    .cookie-consent { position: fixed; left: 12px;
+      right: 12px; bottom: 12px; z-index: 9999; background: linear-gradient(90deg,#ffffff,#fffaf0); border-radius: 12px; padding: 12px; display:flex; align-items:center; gap:12px; border:1px solid rgba(11,37,69,0.06);
+      box-shadow: 0 12px 40px rgba(11,37,69,0.08); }
+
+    /* Responsive tweaks */
     @media (max-width: 900px) {
-      header h1 { font-size: 1.9rem; }
+      header h1 { font-size: 1.9rem;
+      }
       #stickerCanvas { max-width:420px; max-height:420px; border-width:5px; }
-      .preview-box { height:360px; }
+      .preview-box { height:360px;
+      }
     }
   </style>
-  <!-- ===== end visual-only styles ===== -->
-</head>
+  </head>
 
 <body class="p-4 md:p-8">
   <div class="container mx-auto max-w-6xl">
-    <!-- Header -->
     <header class="text-center mb-6">
       <h1 class="text-4xl font-extrabold mb-1">🚀 StickerGen AI</h1>
       <p class="text-gray-600 muted">Create WhatsApp & Instagram stickers in seconds — AI cartoonify, text & emoji overlays, transparent PNG export.</p>
     </header>
 
-    <!-- Top Ad (Adaptive / 728x90) -->
     <div class="ad-unit h-24 md:h-28 rounded-lg flex items-center justify-center mb-6 card">
-      <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h16" stroke="#6b8dff" stroke-width="2" stroke-linecap="round"/></svg><span class="muted">AD SENSE UNIT TOP (728x90 / Adaptive)</span></div>
+     
+    <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h16" stroke="#6b8dff" stroke-width="2" stroke-linecap="round"/></svg><span class="muted">AD SENSE UNIT TOP (728x90 / Adaptive)</span></div>
     </div>
 
-    <!-- Main grid -->
     <div class="grid lg:grid-cols-3 gap-8">
-      <!-- Controls column -->
       <div class="lg:col-span-1 card p-6 controls rounded-glow">
         <h2 class="text-2xl font-semibold mb-4">1 — Upload & Customize</h2>
 
-        <label class="block text-sm font-medium text-gray-700 mb-2">Select an Image (PNG / JPG / WEBP)</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select 
+an Image (PNG / JPG / WEBP)</label>
         <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="w-full text-sm mb-2" />
         <p id="fileNameDisplay" class="text-xs text-gray-500 italic mb-3">No file selected.</p>
 
         <div class="mb-3">
           <label class="text-sm font-medium text-gray-700">Sticker Type</label>
           <div class="flex gap-2 mt-2">
-            <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-pink-50 to-blue-50 border border-transparent"><input name="stickerType" type="radio" value="cartoon" checked onchange="updateControls()" /> <span>✨ AI Cartoon</span></label>
+            <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-pink-50 to-blue-50 border border-transparent"><input name="stickerType" type="radio" value="cartoon" checked 
+onchange="updateControls()" /> <span>✨ AI Cartoon</span></label>
             <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-amber-50 to-lime-50"><input name="stickerType" type="radio" value="text" onchange="updateControls()" /> <span>💬 Text</span></label>
             <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-rose-50 to-cyan-50"><input name="stickerType" type="radio" value="emoji" onchange="updateControls()" /> <span>😂 Emoji</span></label>
           </div>
         </div>
 
         <div id="customizationSection" class="space-y-3 mb-4">
-          <div id="textInputGroup" class="hidden">
+          <div 
+id="textInputGroup" class="hidden">
             <label class="text-sm font-medium">Sticker Text (max 20 chars)</label>
-            <input id="stickerText" maxlength="20" class="w-full p-2 border rounded-lg" placeholder="E.g., HELLO!" />
+            <input id="stickerText" maxlength="20" class="w-full p-2 border rounded-lg" placeholder="E.g., HELLO!"
+/>
             <label class="text-xs text-gray-500 mt-1">Short uppercase text works best.</label>
           </div>
 
@@ -222,24 +259,30 @@
           </div>
 
           <div>
-            <label class="text-sm font-medium">Scale</label>
+   
+          <label class="text-sm font-medium">Scale</label>
             <input id="scaleRange" type="range" min="0.6" max="1.4" step="0.01" value="1" class="w-full" />
             <div class="flex items-center gap-3 text-xs text-gray-600 mt-1">
               <label class="flex items-center gap-2"><input id="outlineToggle" type="checkbox" /> Outline</label>
               <label class="flex items-center gap-2 text-xs">Thickness <input id="outlineThickness" type="range" min="0" max="24" value="12" class="w-24" /></label>
-            </div>
+    
+          <label class="flex items-center gap-2 text-xs">
+            <input id="polishToggle" type="checkbox" /> Polish
+          </label>
           </div>
         </div>
 
         <div class="mb-4">
           <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-3 font-bold btn-primary rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
             <svg id="generateIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            <svg id="loadingSpinner" class="animate-spin w-5 h-5 hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <svg id="loadingSpinner" class="animate-spin w-5 
+h-5 hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
             <span id="generateText">Generate Sticker</span>
           </button>
 
           <div class="my-3 bg-gradient-to-r from-white to-yellow-50 p-3 rounded-lg border border-yellow-100 text-center">
-            <strong class="text-gray-600">AD SENSE (In-content) — paste AdSense code here</strong>
+            <strong class="text-gray-600">AD SENSE (In-content) — paste 
+AdSense code here</strong>
           </div>
 
           <p id="statusMessage" class="text-center text-sm mt-2 muted h-6"></p>
@@ -248,52 +291,52 @@
         <div id="actionButtons" class="hidden flex gap-3 action-row">
           <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-2 bg-white border border-gray-200 rounded-lg">Download PNG</button>
           <button id="addToPackBtn" onclick="addToPack()" class="flex-1 py-2 btn-accent rounded-lg">➕ Add to Pack</button>
-          <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-2" style="background:linear-gradient(90deg,#34d399,#60a5fa); color:#fff; border-radius:12px;">Share</button>
+          <button id="shareBtn" onclick="shareSticker()" 
+class="flex-1 py-2" style="background:linear-gradient(90deg,#34d399,#60a5fa); color:#fff; border-radius:12px;">Share</button>
         </div>
 
         <div class="mt-4 space-y-2 text-xs muted">
           <div class="flex justify-between"><span>Pack items:</span><strong id="packCount">0</strong></div>
           <div class="flex gap-2">
-            <button id="downloadPackBtn" onclick="downloadPack()" class="flex-1 py-2" style="background:linear-gradient(90deg,#7c3aed,#06b6d4); color:#fff; border-radius:12px;">Download Pack (ZIP)</button>
+            <button id="downloadPackBtn" onclick="downloadPack()" class="flex-1 py-2" style="background:linear-gradient(90deg,#7c3aed,#06b6d4);
+color:#fff; border-radius:12px;">Download Pack (ZIP)</button>
             <button onclick="clearPack()" class="py-2 px-3 bg-gray-100 rounded-lg">Clear</button>
           </div>
           <div class="text-xxs text-gray-500 mt-2">Tip: App runs locally if no server API key is configured.</div>
         </div>
       </div>
 
-      <!-- Preview + Ads -->
       <div class="lg:col-span-2 space-y-6">
         <div class="card p-4 preview-box rounded-glow">
-          <div class="flex items-center justify-between mb-3 px-2">
+   
+        <div class="flex items-center justify-between mb-3 px-2">
             <h3 class="text-lg font-semibold">2 — Sticker Preview</h3>
             <div class="text-sm text-gray-500 muted">Canvas: 512×512 (export)</div>
           </div>
 
-          <div class="relative h-full flex items-center justify-center rounded-xl p-3" style="background: linear-gradient(180deg,#fef3c7,#eff6ff); border:1px solid rgba(11,37,69,0.02);">
+          <div class="relative h-full flex items-center justify-center rounded-xl p-3" style="background: linear-gradient(180deg,#fef3c7,#eff6ff);
+border:1px solid rgba(11,37,69,0.02);">
             <canvas id="stickerCanvas" width="512" height="512" class="shadow-inner"></canvas>
             <div id="initialPrompt" class="absolute text-center text-gray-600 pointer-events-none">
               <svg class="w-14 h-14 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-              <p>Upload a photo and click <strong>Generate Sticker</strong>.</p>
+          
+          <p>Upload a photo and click **Generate Sticker**.</p>
             </div>
           </div>
         </div>
 
-        <!-- Native/medium rectangle ad -->
         <div class="ad-unit h-44 rounded-xl flex items-center justify-center card">
           <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16" stroke="#ffd166" stroke-width="2" stroke-linecap="round"/></svg><span class="muted">AD SENSE UNIT (336x280 / Native)</span></div>
+    
         </div>
       </div>
     </div>
 
-    <!-- Footer ad & content -->
     <div class="mt-8 grid lg:grid-cols-2 gap-4">
       <div class="card p-4 rounded-glow">
         <h3 class="text-lg font-semibold mb-2">About StickerGen AI — SEO-friendly writeup</h3>
         <p class="text-sm muted leading-relaxed">
-          StickerGen AI converts your photos into high-quality, transparent PNG stickers ready for WhatsApp and Instagram.
-          Use the <strong>AI Cartoon</strong> mode for stylized cartoons, or use <strong>Text</strong> and <strong>Emoji</strong> modes to personalize stickers quickly.
-          The app emphasizes privacy — processing happens client-side when possible and images are not stored on our servers.
-          Export single stickers or build sticker packs (ZIP) for download.
+          StickerGen AI converts your photos into high-quality, transparent PNG stickers ready for WhatsApp and Instagram. Use the **AI Cartoon** mode for stylized cartoons, or use **Text** and **Emoji** modes to personalize stickers quickly. The app emphasizes privacy — processing happens client-side when possible and images are not stored on our servers. Export single stickers or build sticker packs (ZIP) for download.
         </p>
         <p class="text-xs text-gray-500 mt-3">Tip: Use short text (<=20 chars) and high-contrast photos for best cartoon results.</p>
       </div>
@@ -303,6 +346,7 @@
         <div class="bg-gradient-to-r from-white to-slate-50 p-3 rounded border border-gray-100 text-center">
           <strong class="text-gray-600">AD SENSE UNIT (Footer) — paste AdSense snippet here</strong>
         </div>
+  
       </div>
     </div>
 
@@ -312,31 +356,34 @@
         <p class="text-sm muted">Last Updated: Nov 29, 2025</p>
 
         <div class="text-sm text-gray-600 space-y-3">
-          <strong>1. Data handling & No-Storage</strong>
+          <strong>1.
+Data handling & No-Storage</strong>
           <p class="muted">StickerGen AI processes images client-side when possible. Uploaded images are used only to generate stickers and are not stored persistently by this site. If you configure a third-party AI server to process images (by adding an API key), images may be transmitted to that provider — ensure the provider's data policy meets your requirements before enabling server processing.</p>
 
-          <strong>2. Third-party services & ads</strong>
+          <strong>2.
+Third-party services & ads</strong>
           <p class="muted">We use Google AdSense to display ads. Google, as a third-party vendor, may use cookies to serve ads based on the user's previous visits to our site and other sites. To opt out of personalized ads, users may visit Google's Ads Settings. We do not sell personal data.</p>
 
-          <strong>3. Third-party sharing</strong>
+          <strong>3.
+Third-party sharing</strong>
           <p class="muted">Sharing uses native Web Share APIs and external apps; we are not responsible for their data practices.</p>
 
-          <strong>4. Rights & requests</strong>
-          <p class="muted">If you wish to request deletion of stored data or exercise rights under GDPR/CCPA, contact the site owner at <em>privacy@example.com</em>. Note: by default the site does not store images; the email is for any account or analytic requests.</p>
+          <strong>4.
+Rights & requests</strong>
+          <p class="muted">If you wish to request deletion of stored data or exercise rights under GDPR/CCPA, contact the site owner at *privacy@example.com*. Note: by default the site does not store images; the email is for any account or analytic requests.</p>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- Sticky bottom anchor ad (non-intrusive) -->
   <div id="stickyAd" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-12 md:bottom-12 z-50">
     <div class="bg-white p-3 rounded-lg shadow-lg border border-gray-200 flex items-center justify-between">
       <div class="text-sm text-gray-600">AD SENSE ANCHOR (mobile sticky) — paste code here</div>
       <button onclick="document.getElementById('stickyAd').style.display='none'" class="text-xs px-2 py-1 rounded bg-gray-100">Close</button>
+  
     </div>
   </div>
 
-  <!-- Cookie consent (simple) -->
   <div id="cookieConsent" class="cookie-consent hidden">
     <div class="flex-1 text-sm text-gray-800">We use cookies & third-party ads to improve experience and serve ads. By continuing you accept our <a href="#privacyPolicy" class="underline">privacy policy</a>.</div>
     <div class="flex gap-2">
@@ -345,9 +392,8 @@
     </div>
   </div>
 
-  <!-- MAIN SCRIPT: fixed & defensive -->
   <script>
-  /********** StickerGen AI — robust script (fixed issues) **********/
+  /********** StickerGen AI — replacement main script (robust, fixed Generate) **********/
   const canvas = document.getElementById('stickerCanvas');
   const ctx = canvas.getContext('2d');
   const fileInput = document.getElementById('fileInput');
@@ -368,18 +414,24 @@
   const scaleRange = document.getElementById('scaleRange');
   const outlineToggle = document.getElementById('outlineToggle');
   const outlineThickness = document.getElementById('outlineThickness');
+  const polishToggle = document.getElementById('polishToggle'); // FIXED: This now retrieves the element we added to the HTML
 
   let uploadedImageBase64 = null;
   let originalImage = null;
   let pack = [];
 
   // API config (insert your key to enable server AI)
-  const apiKey = ""; // <-- Add Gemini API key to enable server-based generation
+  // 🔑 REMEMBER: Insert your Gemini API key here for reliable AI generation.
+  const apiKey = ""; 
+  // <-- Add Gemini API key to enable server-based generation
   const MODEL_NAME = "gemini-2.5-flash-image-preview";
-  const API_URL = apiKey ? `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}` : null;
+  const API_URL = apiKey ?
+  `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}` : null;
 
+  // ---------- utility & UI helpers ----------
   function showStatus(text, isError=false){
-    statusMessage.textContent = text || "";
+    statusMessage.textContent = text ||
+"";
     statusMessage.classList.toggle('text-red-600', !!isError);
     console.log("Status:", text);
   }
@@ -390,8 +442,10 @@
     generateText.textContent = isProcessing ? 'Processing...' : 'Generate Sticker';
     if (isProcessing) showStatus('Processing image...');
   }
-  function isSupportedImageType(type){ return /^image\/(png|jpeg|webp)$/i.test(type); }
+  function isSupportedImageType(type){ return /^image\/(png|jpeg|webp)$/i.test(type);
+  }
 
+  // File -> base64
   function convertToBase64(file){
     return new Promise((resolve,reject)=>{
       const reader = new FileReader();
@@ -402,9 +456,11 @@
         resolve({ data: res.slice(comma+1), mimeType: file.type || 'image/png' });
       };
       reader.readAsDataURL(file);
+    
     });
   }
 
+  // Fit calculations & drawing helpers (unchanged logic)
   function computeFitRect(imgW, imgH, canvasW, canvasH, scale=1){
     const ratio = Math.min((canvasW / imgW) * scale, (canvasH / imgH) * scale);
     const dw = imgW * ratio, dh = imgH * ratio;
@@ -444,8 +500,10 @@
     }
   }
 
+  // Overlay drawing
   function drawOverlay(type){
-    if (!originalImage) { showStatus('No image to draw overlay on.', true); return; }
+    if (!originalImage) { showStatus('No image to draw overlay on.', true);
+    return; }
     drawPreview(originalImage);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -464,30 +522,35 @@
     }
   }
 
-  // Local cartoonify fallback (guaranteed present here)
+  // ---------- local cartoonify fallback (unchanged) ----------
   function posterizeCanvasFromImage(img, levels = 6){
-    const tmp = document.createElement('canvas'); tmp.width = 512; tmp.height = 512;
+    const tmp = document.createElement('canvas');
+    tmp.width = 512; tmp.height = 512;
     const tctx = tmp.getContext('2d'); tctx.drawImage(img, 0,0,tmp.width,tmp.height);
     const id = tctx.getImageData(0,0,tmp.width,tmp.height);
     for (let i=0;i<id.data.length;i+=4) for (let c=0;c<3;c++){
-      const v = id.data[i+c]; const q = Math.floor((v/255)*(levels-1)) * (255/(levels-1)); id.data[i+c] = q;
+      const v = id.data[i+c];
+      const q = Math.floor((v/255)*(levels-1)) * (255/(levels-1)); id.data[i+c] = q;
     }
     tctx.putImageData(id,0,0); return tmp;
   }
   function edgeDetectCanvas(srcCanvas){
     const w = srcCanvas.width, h = srcCanvas.height;
-    const sctx = srcCanvas.getContext('2d'); const src = sctx.getImageData(0,0,w,h);
+    const sctx = srcCanvas.getContext('2d');
+    const src = sctx.getImageData(0,0,w,h);
     const out = sctx.createImageData(w,h);
     for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++){
       let sum=0;
       for (let ky=-1;ky<=1;ky++) for (let kx=-1;kx<=1;kx++){
-        const idx = ((y+ky)*w + (x+kx))*4; const gray = (src.data[idx]+src.data[idx+1]+src.data[idx+2])/3;
+        const idx = ((y+ky)*w + (x+kx))*4;
+        const gray = (src.data[idx]+src.data[idx+1]+src.data[idx+2])/3;
         sum += gray * ((kx===0 && ky===0) ? -8 : 1);
       }
       const oidx = (y*w + x)*4; const val = Math.max(0, Math.min(255, Math.abs(sum)));
       out.data[oidx] = out.data[oidx+1] = out.data[oidx+2] = 255 - val; out.data[oidx+3] = 255;
     }
-    const eCanvas = document.createElement('canvas'); eCanvas.width=w; eCanvas.height=h; eCanvas.getContext('2d').putImageData(out,0,0); return eCanvas;
+    const eCanvas = document.createElement('canvas');
+    eCanvas.width=w; eCanvas.height=h; eCanvas.getContext('2d').putImageData(out,0,0); return eCanvas;
   }
   async function inBrowserCartoonify(img){
     showStatus('Running local cartoonify...');
@@ -497,27 +560,46 @@
     const octx = out.getContext('2d'); octx.drawImage(poster,0,0,out.width,out.height);
     octx.globalCompositeOperation = 'multiply'; octx.drawImage(edges,0,0,out.width,out.height); octx.globalCompositeOperation = 'source-over';
     const id = octx.getImageData(0,0,out.width,out.height);
-    function sample(x,y){ const idx=(y*out.width+x)*4; return [id.data[idx],id.data[idx+1],id.data[idx+2]]; }
+    function sample(x,y){ const idx=(y*out.width+x)*4;
+    return [id.data[idx],id.data[idx+1],id.data[idx+2]]; }
     const c1=sample(2,2), c2=sample(out.width-3,2), c3=sample(2,out.height-3), c4=sample(out.width-3,out.height-3);
     const bg = [(c1[0]+c2[0]+c3[0]+c4[0])/4, (c1[1]+c2[1]+c3[1]+c4[1])/4, (c1[2]+c2[2]+c3[2]+c4[2])/4];
     for (let i=0;i<id.data.length;i+=4){ const dr=id.data[i]-bg[0], dg=id.data[i+1]-bg[1], db=id.data[i+2]-bg[2]; const dist=Math.sqrt(dr*dr+dg*dg+db*db); if (dist<90) id.data[i+3]=0; }
     octx.putImageData(id,0,0); return out;
   }
 
+  // ---------- network helper ----------
   async function fetchWithExponentialBackoff(url, options, maxRetries=4){
     for (let i=0;i<maxRetries;i++){
       try {
         const r = await fetch(url, options);
-        if (r.status === 429) { await new Promise(res=>setTimeout(res, Math.pow(2,i)*1000)); continue; }
+        if (r.status === 429) {
+          await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
+          continue;
+        }
         return r;
       } catch (e){
         console.warn('Fetch attempt failed', e);
-        await new Promise(res=>setTimeout(res, Math.pow(2,i)*500));
+        await new Promise(res => setTimeout(res, Math.pow(2, i) * 500));
       }
     }
     throw new Error('Network error after retries');
   }
 
+  // ---------- post-process functions (graceful no-op if not provided) ----------
+  async function postProcessCurrentImage(opts = {}) {
+    if (typeof window.postProcessCurrentImage === 'function') {
+      try {
+        await window.postProcessCurrentImage(opts);
+        return;
+      } catch (err) {
+        console.warn('postProcessCurrentImage failed fallback:', err);
+      }
+    }
+    return;
+  }
+
+  // ---------- core flow: prepare & generate ----------
   async function prepareAndGenerate(){
     try {
       setProcessingState(true);
@@ -537,7 +619,8 @@
       }
 
       if (selectedType === 'text' || selectedType === 'emoji') {
-        const content = selectedType === 'text' ? stickerText.value.trim() : stickerEmoji.value.trim();
+        const content = selectedType === 'text' ?
+        stickerText.value.trim() : stickerEmoji.value.trim();
         if (!content) {
           showStatus(`Please enter the ${selectedType} before generating.`, true);
           setProcessingState(false);
@@ -545,6 +628,15 @@
         }
 
         drawOverlay(selectedType);
+        if (polishToggle && polishToggle.checked) {
+          const tmpImg = new Image();
+          tmpImg.src = canvas.toDataURL('image/png');
+          await new Promise((res,rej) => { tmpImg.onload = res; tmpImg.onerror = rej; });
+          originalImage = tmpImg;
+          await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:14, shadowAlpha:0.2});
+          drawPreview(originalImage);
+        }
+
         actionButtons.classList.remove('hidden');
         showStatus('Sticker generated!');
         setProcessingState(false);
@@ -575,15 +667,20 @@
         return;
       }
 
-      // If no API configured, run the in-browser fallback
       if (!API_URL) {
-        showStatus('No API key configured — using local cartoonify fallback.');
+        showStatus('No API key found — using local cartoonify fallback.');
         try {
+          // This call is now correctly defined because the script will run entirely.
           const fallbackCanvas = await inBrowserCartoonify(originalImage);
           const img = new Image();
           img.src = fallbackCanvas.toDataURL('image/png');
-          await new Promise((res, rej)=>{ img.onload = res; img.onerror = rej; });
+          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
           originalImage = img;
+
+          if (polishToggle && polishToggle.checked) {
+            await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          }
+
           drawPreview(originalImage);
           actionButtons.classList.remove('hidden');
           showStatus('✨ Cartoon sticker ready (local).');
@@ -597,32 +694,35 @@
         }
       }
 
-      showStatus('Sending to AI server...');
+      showStatus('Sending the image to AI server (if configured)...');
       const prompt = "Convert subject into vibrant cartoon sticker. Remove background. Output transparent PNG 512x512.";
       const payload = {
         contents: [{
           parts: [
             { text: prompt },
-            { inlineData: { mimeType: fileInput.dataset.mimeType || 'image/png', data: uploadedImageBase64 } }
+            { inlineData: { mimeType: fileInput.dataset.mimeType ||
+'image/png', data: uploadedImageBase64 } }
           ]
         }],
         generationConfig: { responseModalities: ['IMAGE'] }
       };
-
       try {
         const res = await fetchWithExponentialBackoff(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         }, 4);
-
         if (!res.ok) {
           const txt = await res.text().catch(()=>null);
           console.warn('AI server response not OK', res.status, txt);
           showStatus('AI server returned an error — using local fallback.', true);
           const fallbackCanvas = await inBrowserCartoonify(originalImage);
           const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
-          originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden'); return;
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+          return;
         }
 
         const json = await res.json();
@@ -631,8 +731,13 @@
           console.warn('AI returned no image data', json);
           showStatus('AI did not return an image. Running local fallback.', true);
           const fallbackCanvas = await inBrowserCartoonify(originalImage);
-          const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
-          originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden'); return;
+          const img = new Image();
+          img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
+          return;
         }
 
         const imageUrl = `data:image/png;base64,${base64Data}`;
@@ -641,6 +746,9 @@
         await new Promise((res,rej)=>{ aiImg.onload=res; aiImg.onerror=rej; });
 
         originalImage = aiImg;
+        if (polishToggle && polishToggle.checked) {
+          await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+        }
         drawPreview(originalImage);
         actionButtons.classList.remove('hidden');
         showStatus('✨ Cartoon sticker ready!');
@@ -650,7 +758,10 @@
         try {
           const fallbackCanvas = await inBrowserCartoonify(originalImage);
           const img = new Image(); img.src = fallbackCanvas.toDataURL('image/png'); await new Promise((res,rej)=>{ img.onload=res; img.onerror=rej; });
-          originalImage = img; drawPreview(originalImage); actionButtons.classList.remove('hidden');
+          originalImage = img;
+          if (polishToggle && polishToggle.checked) await postProcessCurrentImage({feather:6, outlineWidth:10, shadowBlur:16, shadowAlpha:0.22});
+          drawPreview(originalImage);
+          actionButtons.classList.remove('hidden');
         } catch (fbErr) {
           console.error('fallback after AI failed:', fbErr);
           showStatus('All generation attempts failed. See console for details.', true);
@@ -658,6 +769,7 @@
       } finally {
         setProcessingState(false);
       }
+
     } catch (err) {
       console.error('generateAISticker outer error:', err);
       showStatus('Unexpected error during generation. See console.', true);
@@ -665,12 +777,17 @@
     }
   }
 
+  // ---------- export & sharing (unchanged logic) ----------
   function buildExportCanvas(){
-    const tmp = document.createElement('canvas'); tmp.width=512; tmp.height=512; const tctx = tmp.getContext('2d'); tctx.clearRect(0,0,tmp.width,tmp.height);
-    if (originalImage) { const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange.value)||1); tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh); }
+    const tmp = document.createElement('canvas');
+    tmp.width=512; tmp.height=512; const tctx = tmp.getContext('2d'); tctx.clearRect(0,0,tmp.width,tmp.height);
+    if (originalImage) { const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange.value)||1);
+    tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh); }
     const selectedType = document.querySelector('input[name="stickerType"]:checked')?.value;
-    if (selectedType === 'text' && stickerText.value.trim()) { tctx.font='bold 60px Inter, sans-serif'; tctx.textAlign='center'; tctx.fillStyle='white'; tctx.strokeStyle='black'; tctx.lineWidth=8; tctx.strokeText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88); tctx.fillText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88); }
-    else if (selectedType === 'emoji' && stickerEmoji.value.trim()) { tctx.font='110px Inter, sans-serif'; tctx.fillText(stickerEmoji.value.trim(), tmp.width * 0.82, tmp.height * 0.16); }
+    if (selectedType === 'text' && stickerText.value.trim()) { tctx.font='bold 60px Inter, sans-serif'; tctx.textAlign='center'; tctx.fillStyle='white'; tctx.strokeStyle='black'; tctx.lineWidth=8; tctx.strokeText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88);
+    tctx.fillText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height*0.88); }
+    else if (selectedType === 'emoji' && stickerEmoji.value.trim()) { tctx.font='110px Inter, sans-serif';
+    tctx.fillText(stickerEmoji.value.trim(), tmp.width * 0.82, tmp.height * 0.16); }
     return tmp;
   }
   function downloadSticker(){
@@ -679,16 +796,22 @@
   }
   async function shareSticker(){
     try {
-      const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res, 'image/png'));
+      const out = buildExportCanvas();
+      const blob = await new Promise(res=>out.toBlob(res, 'image/png'));
       const file = new File([blob], 'ai-sticker.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title:'StickerGen AI', text:'Check my sticker!' }); showStatus('Shared successfully!'); }
-      else { showStatus('Sharing not supported — downloading.'); downloadSticker(); }
-    } catch (err) { console.error('shareSticker error', err); showStatus('Share failed — downloading.', true); downloadSticker(); }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title:'StickerGen AI', text:'Check my sticker!' }); showStatus('Shared successfully!');
+      }
+      else { showStatus('Sharing not supported — downloading.'); downloadSticker();
+      }
+    } catch (err) { console.error('shareSticker error', err); showStatus('Share failed — downloading.', true); downloadSticker();
+    }
   }
   async function addToPack(){
-    const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res,'image/png')); pack.push(blob); packCountEl.textContent = pack.length; showStatus('Added to pack.');
+    const out = buildExportCanvas(); const blob = await new Promise(res=>out.toBlob(res,'image/png'));
+    pack.push(blob); packCountEl.textContent = pack.length; showStatus('Added to pack.');
   }
-  function clearPack(){ pack = []; packCountEl.textContent = 0; showStatus('Pack cleared.'); }
+  function clearPack(){ pack = []; packCountEl.textContent = 0; showStatus('Pack cleared.');
+  }
   async function downloadPack(){
     if (!pack.length){ showStatus('Pack empty.', true); return; }
     showStatus('Preparing pack...');
@@ -700,6 +823,7 @@
     showStatus('Pack downloaded!');
   }
 
+  // ---------- file input handling ----------
   fileInput.addEventListener('change', async (e) => {
     try {
       const file = e.target.files?.[0];
@@ -711,6 +835,7 @@
         initialPrompt.classList.remove('hidden');
         return;
       }
+   
       if (!isSupportedImageType(file.type)) {
         fileNameDisplay.textContent = 'Error: Only PNG, JPG, WebP supported.';
         uploadedImageBase64 = null;
@@ -722,7 +847,8 @@
       }
 
       fileNameDisplay.textContent = `File loaded: ${file.name}`;
-      const { data, mimeType } = await convertToBase64(file);
+      const { data, 
+mimeType } = await convertToBase64(file);
       uploadedImageBase64 = data;
       fileInput.dataset.mimeType = mimeType;
 
@@ -737,7 +863,8 @@
         initialPrompt.classList.add('hidden');
         showStatus('Ready to generate!');
       };
-      img.onerror = (err) => { console.error('Image load error', err); showStatus('Error loading image.', true); URL.revokeObjectURL(obj); };
+      img.onerror = (err) => { console.error('Image load error', err);
+      showStatus('Error loading image.', true); URL.revokeObjectURL(obj); };
       img.src = obj;
     } catch (err) {
       console.error('file input handler error', err);
@@ -745,6 +872,7 @@
     }
   });
 
+  // ---------- controls ----------
   function updateControls(){
     const selectedType = document.querySelector('input[name="stickerType"]:checked')?.value;
     textInputGroup.classList.toggle('hidden', selectedType !== 'text');
@@ -752,10 +880,11 @@
     if (originalImage){ drawPreview(originalImage); actionButtons.classList.add('hidden'); }
   }
   updateControls(); generateBtn.disabled = true;
-
+  // cookie handlers & window exposure
   function acceptCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); }
   function declineCookies(){ document.getElementById('cookieConsent').classList.add('hidden'); }
-  window.acceptCookies = acceptCookies; window.declineCookies = declineCookies;
+  window.acceptCookies = acceptCookies;
+  window.declineCookies = declineCookies;
 
   window.prepareAndGenerate = prepareAndGenerate;
   window.downloadSticker = downloadSticker;
@@ -765,6 +894,7 @@
   window.downloadPack = downloadPack;
   window.updateControls = updateControls;
 
+  // show sticky ad and cookie bar as before
   setTimeout(()=>{ const el=document.getElementById('stickyAd'); if (el) el.classList.remove('hidden'); }, 2500);
   setTimeout(()=>{ const c=document.getElementById('cookieConsent'); if (c) c.classList.remove('hidden'); }, 1000);
   </script>
