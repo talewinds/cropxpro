@@ -1,856 +1,547 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  
-  <title>CropXPro — Free AI Reels Maker, Splitter & Thumbnail Tool</title>
-  <meta name="description" content="All-in-one Creator Studio: Auto-crop videos for Reels/TikTok, Split videos for WhatsApp Status, and Generate Thumbnails instantly. Free, No Login, Secure.">
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght=400;500;700;800&family=Inter:wght=400;500;600&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --primary: #6366f1; /* Indigo */
-      --secondary: #ec4899; /* Pink */
-      --success: #10b981; /* Emerald Green */
-      --bg: #0f172a;
-      --surface: #1e293b;
-      --surface-hover: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    h1, h2, h3 { font-family: 'Outfit', sans-serif; margin: 0; }
-
-    /* Header */
-    header {
-      width: 100%;
-      padding: 20px;
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      position: sticky; top: 0; z-index: 50;
-      display: flex; justify-content: center;
-    }
-    .header-inner {
-      width: 100%; max-width: 1200px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-box {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 20px;
-    }
-
-    /* Ad Slots */
-    .ad-slot {
-      width: 100%;
-      max-width: 1000px; height: 100px;
-      background: rgba(255,255,255,0.02);
-      border: 1px dashed rgba(255,255,255,0.1);
-      margin: 20px 0;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-muted); font-size: 12px;
-      border-radius: var(--radius);
-      overflow: hidden; /* Ensure ads don't spill out */
-    }
-
-    /* Main Layout */
-    main {
-      width: 100%;
-      max-width: 1200px;
-      padding: 20px;
-      display: grid; grid-template-columns: 1fr; gap: 20px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 10px; margin-bottom: 20px;
-      overflow-x: auto; padding-bottom: 5px;
-    }
-    .tab-btn {
-      background: var(--surface);
-      color: var(--text-muted);
-      border: 1px solid rgba(255,255,255,0.05);
-      padding: 12px 24px;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: all 0.3s;
-    }
-    .tab-btn.active {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-    }
-
-    /* Cards */
-    .tool-section { display: none; }
-    .tool-section.active { display: block; animation: fadeIn 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); }}
-
-    .grid-layout {
-      display: grid; grid-template-columns: 1fr 350px; gap: 24px;
-    }
-    @media(max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 24px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    /* Components */
-    .btn {
-      background: linear-gradient(135deg, var(--primary), #4338ca);
-      color: white; border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: 600; cursor: pointer;
-      width: 100%; margin-top: 15px;
-      transition: transform 0.2s;
-    }
-    .btn:hover:not(:disabled) { transform: scale(1.02); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-    
-    .upload-zone {
-      border: 2px dashed rgba(255,255,255,0.2);
-      border-radius: var(--radius);
-      padding: 40px; text-align: center;
-      cursor: pointer; transition: all 0.5s;
-    }
-    .upload-zone:hover { background: rgba(255,255,255,0.02); border-color: var(--primary); }
-    .upload-zone.uploaded {
-      background: rgba(16, 185, 129, 0.1);
-      border-color: var(--success);
-    }
-    .upload-zone.uploaded:hover { background: rgba(16, 185, 129, 0.2); }
-
-    .file-item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.2);
-      padding: 10px;
-      margin-top: 10px; border-radius: 8px;
-    }
-    .delete-btn {
-        background: none;
-        border: none;
-        color: #ef4444; /* Red */
-        font-weight: 700;
-        cursor: pointer;
-        padding: 0 5px;
-        font-size: 16px;
-        transition: color 0.2s;
-        line-height: 1;
-    }
-    .delete-btn:hover { color: #f87171; }
-
-    /* Thumb Tool Specific */
-    .thumb-canvas-container {
-      max-width: 100%;
-      overflow: hidden;
-      border-radius: 8px; border: 1px solid #333;
-      margin-top: 20px;
-    }
-    video.thumb-source { width: 100%; max-height: 300px; background: #000; }
-
-    /* Previews */
-    .preview-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 20px; }
-    .preview-item { background: #000; border-radius: 8px; overflow: hidden; }
-    .preview-item video, .preview-item img { width: 100%; display: block; }
-    .preview-actions { padding: 8px; background: #222; text-align: center; }
-    .preview-actions button { font-size: 11px; padding: 4px 8px; }
-
-    /* Log */
-    #logArea { 
-      font-family: monospace;
-      font-size: 11px; color: var(--text-muted); 
-      height: 100px; overflow-y: auto; background: rgba(0,0,0,0.3); 
-      padding: 10px; border-radius: 8px; margin-top: 20px;
-    }
-    
-    /* Modal Styling */
-    .app-modal {
-      display: none;
-      position:fixed; top:0; left:0; width:100%; height:100%; 
-      background:rgba(0,0,0,0.8); z-index:100; justify-content:center; align-items:center;
-    }
-    .modal-content {
-      background:var(--surface);
-      padding:30px; border-radius:20px; max-width:500px; 
-      color:var(--text); width: 90%;
-    }
-    
-    /* Footer */
-    footer {
-      margin-top: 40px;
-      padding: 30px; border-top: 1px solid rgba(255,255,255,0.1);
-      text-align: center; color: var(--text-muted); font-size: 13px;
-    }
-    
-    .feature-check { margin: 8px 0; font-size: 13px; display: flex; align-items: center; gap: 8px; }
-    input[type="checkbox"] { accent-color: var(--secondary); transform: scale(1.2); }
-
-    .header-btns { display: flex; gap: 10px; }
-    .header-btns button {
-      width: auto; padding: 8px 16px; font-size: 12px;
-      background: #333;
-      border-radius: 8px; font-weight: 500;
-      transition: background 0.2s;
-    }
-    .header-btns button:hover { background: #444; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sticker Maker - Cartoon, Text & Emoji for WhatsApp/Instagram</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Instantly convert your photos into shareable WhatsApp and Instagram stickers! Use AI to create transparent background cartoon stickers, or add custom text and emojis. Free, fast, and secure.">
+    <meta name="keywords" content="sticker maker, whatsapp stickers, instagram stickers, cartoonify photo, transparent background, AI sticker, free sticker creator, emoji sticker">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for a polished, app-like feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        .container {
+            max-width: 1400px;
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        #stickerCanvas {
+            border: 2px dashed #cbd5e1;
+            background-color: #e2e8f0; /* Checkerboard simulation background */
+        }
+        /* Mobile-first adjustments */
+        @media (max-width: 767px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .ad-unit {
+                height: 100px;
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#10b981', /* Emerald/Teal look */
+                        'primary-dark': '#064e3b',
+                        'secondary-gray': '#e2e8f0',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="p-4 md:p-8 bg-gray-50">
 
-  <header>
-    <div class="header-inner">
-      <div class="logo">
-        <div class="logo-box">CX</div>
-        <div>
-          <h2>CropXPro</h2>
-          <span style="font-size: 11px; color: var(--secondary); font-weight: 600;">CREATOR STUDIO</span>
+    <div class="container mx-auto">
+        
+        <!-- HEADER & TOP AD UNIT -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-primary-dark mb-2">
+                🚀 StickerGen AI
+            </h1>
+            <p class="text-xl text-gray-600">The quickest way to turn photos into shareable stickers.</p>
+        </header>
+
+        <!-- AdSense Placeholder 1 (Large Banner - Top/Center) -->
+        <div class="ad-unit h-24 md:h-32 bg-secondary-gray flex items-center justify-center rounded-lg mb-8 border border-gray-300">
+            <p class="text-gray-500 font-semibold text-lg">AD SENSE UNIT 1 (728x90 or Adaptive)</p>
         </div>
-      </div>
-      <div class="header-btns">
-        <button onclick="document.getElementById('aboutModal').style.display='flex'">About</button>
-        <button onclick="document.getElementById('privacyModal').style.display='flex'">Privacy</button>
-      </div>
-    </div>
-  </header>
 
-  <div class="ad-slot">
-    <span>Advertisement Space (Top Banner)</span>
-  </div>
+        <!-- MAIN APP GRID -->
+        <div class="grid main-grid lg:grid-cols-3 gap-8">
 
-  <main>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('cropper', event)">✂️ AI Auto-Crop</button>
-      <button class="tab-btn" onclick="switchTab('splitter', event)">⏱️ Reels Splitter</button>
-      <button class="tab-btn" onclick="switchTab('thumb', event)">🖼️ Thumbnail Maker</button>
-    </div>
+            <!-- LEFT COLUMN: CONTROLS (Always visible) -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl card h-fit sticky top-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">1. Upload & Customize</h2>
 
-    <div id="cropper" class="tool-section active">
-      <div class="grid-layout">
-        <div class="card">
-          <h3>1. Upload & Settings</h3>
-          <div class="upload-zone" id="cropDrop">
-            <div style="font-size: 30px; margin-bottom: 10px;">☁️</div>
-            <div>Drop horizontal videos here</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top:5px;">Max 10 mins recommended (Client-Side)</div>
-          </div>
-          <input type="file" id="cropInput" multiple accept="video/*" style="display:none">
-          <div id="cropFileList"></div>
+                <!-- File Upload -->
+                <div class="mb-6">
+                    <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">Select an Image (PNG or JPG)</label>
+                    <input type="file" id="fileInput" accept="image/png, image/jpeg" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue file:text-white hover:file:bg-primary-dark transition duration-150 rounded-lg border border-gray-300 p-2">
+                    <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 italic">No file selected.</p>
+                </div>
+                
+                <!-- Sticker Type Selection -->
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">2. Choose Sticker Type</h3>
+                <div class="flex flex-wrap gap-4 mb-6" id="stickerTypeControls">
+                    
+                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
+                        <input type="radio" name="stickerType" value="cartoon" checked class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
+                        <span class="font-medium">✨ AI Cartoon Sticker</span>
+                    </label>
 
-          <div style="margin-top: 25px;">
-            <h4>Target Ratios</h4>
-            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:10px;">
-              <label class="feature-check"><input type="checkbox" class="aspect-opt" value="9:16" checked> 9:16 (Reels/TikTok)</label>
-              <label class="feature-check"><input type="checkbox" class="aspect-opt" value="1:1" checked> 1:1 (Square)</label>
-              <label class="feature-check"><input type="checkbox" class="aspect-opt" value="4:5"> 4:5 (Portrait)</label>
-              <label class="feature-check"><input type="checkbox" class="aspect-opt" value="16:9"> 16:9 (YouTube)</label>
+                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
+                        <input type="radio" name="stickerType" value="text" class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
+                        <span class="font-medium">💬 Text Overlay Sticker</span>
+                    </label>
+
+                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
+                        <input type="radio" name="stickerType" value="emoji" class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
+                        <span class="font-medium">😂 Emoji Overlay Sticker</span>
+                    </label>
+                </div>
+
+                <!-- Customization Inputs -->
+                <div id="customizationSection" class="mb-6">
+                    <!-- Default for Cartoon: No extra inputs needed -->
+                    <div id="textInputGroup" class="hidden">
+                        <label for="stickerText" class="block text-sm font-medium text-gray-700 mb-2">Sticker Text</label>
+                        <input type="text" id="stickerText" maxlength="20" placeholder="Type a short message (max 20 chars)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue">
+                    </div>
+                    <div id="emojiInputGroup" class="hidden">
+                        <label for="stickerEmoji" class="block text-sm font-medium text-gray-700 mb-2">Sticker Emoji</label>
+                        <input type="text" id="stickerEmoji" maxlength="2" placeholder="Example: 🔥 or 🥳" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue">
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="mb-4">
+                    <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-4 text-xl font-bold bg-primary-blue text-white rounded-xl hover:bg-primary-dark transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg id="generateIcon" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <svg id="loadingSpinner" class="animate-spin w-6 h-6 mr-2 text-white hidden" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generate Sticker
+                    </button>
+                    <p id="statusMessage" class="text-center text-sm mt-3 text-gray-600 h-5"></p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div id="actionButtons" class="flex gap-4 hidden">
+                    <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-3 text-lg font-semibold bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150">
+                        Download PNG
+                    </button>
+                    <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-3 text-lg font-semibold bg-green-500 text-white rounded-xl hover:bg-green-600 transition duration-150">
+                        Share <span class="hidden sm:inline">via WhatsApp/IG</span>
+                    </button>
+                </div>
             </div>
-          </div>
 
-          <div style="margin-top: 20px;">
-            <h4>AI & Audio Enhancements</h4>
-            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:10px;">
-              <label class="feature-check" title="Keeps subject somewhat centered"><input type="checkbox" id="optZoom"> 🔍 Smart Zoom</label>
-              <label class="feature-check" title="Normalize audio loudness"><input type="checkbox" id="optAudioNorm"> 🔊 Audio Normalize</label>
-              <label class="feature-check" title="Prevent crashes on long videos"><input type="checkbox" id="optSafeMode" checked> 🛡️ Safe Mode (Recommended)</label>
+            <!-- RIGHT COLUMN: PREVIEW & ADS -->
+            <div class="lg:col-span-2">
+                <div class="bg-white p-6 rounded-xl card mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">3. Sticker Preview</h2>
+                    <div class="relative flex items-center justify-center w-full aspect-square bg-gray-100 rounded-lg p-2">
+                        <!-- Sticker Canvas -->
+                        <canvas id="stickerCanvas" width="512" height="512" class="w-full h-full max-w-sm max-h-sm rounded-xl"></canvas>
+                        <div id="initialPrompt" class="absolute text-center text-gray-500 pointer-events-none">
+                            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <p>Upload a photo and click 'Generate' to see your sticker here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AdSense Placeholder 2 (Square/Native Ad) -->
+                <div class="ad-unit h-64 bg-secondary-gray flex items-center justify-center rounded-xl border border-gray-300 mb-8">
+                    <p class="text-gray-500 font-semibold text-lg">AD SENSE UNIT 2 (336x280 or Native)</p>
+                </div>
             </div>
-          </div>
-
-          <button id="startCropBtn" class="btn" disabled>✨ Start Batch Processing</button>
-          
-          <div id="logArea"></div>
         </div>
 
-        <div class="card">
-          <h3>Results</h3>
-          <div id="cropResults" class="preview-list"></div>
-          <div class="ad-slot" style="height: 250px; margin-top:20px;">
-             <span>Ad Space</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="splitter" class="tool-section">
-      <div class="card" style="max-width: 600px; margin: 0 auto;">
-        <div style="text-align:center; margin-bottom:20px;">
-          <h3>WhatsApp / Reels Splitter</h3>
-          <p style="color:var(--text-muted); font-size:13px;">Split long videos into short, upload-ready segments.</p>
-        </div>
-        
-        <div class="upload-zone" id="splitDrop">
-          <div>Click to Upload Long Video</div>
-        </div>
-        <input type="file" id="splitInput" accept="video/*" style="display:none">
-        <div id="splitFileDisplay" style="text-align:center; margin:10px; font-weight:600; color:var(--secondary);"></div>
-
-        <div style="margin: 20px 0;">
-          <label style="font-weight:600;">Segment Duration:</label>
-          <select id="splitDuration" onchange="toggleCustomDuration(this.value)" style="width:100%; padding:10px; margin-top:5px; background:var(--bg); color:white; border:1px solid #444; border-radius:8px;">
-            <option value="15">15 Seconds (WhatsApp Status)</option>
-            <option value="30">30 Seconds (WhatsApp/Reels)</option>
-            <option value="60">60 Seconds (Shorts)</option>
-            <option value="custom">Custom Duration...</option>
-          </select>
-          <input type="number" id="customSplitDuration" placeholder="Enter duration in seconds (e.g., 10)" min="1" style="display:none; width:100%; padding:10px; margin-top:10px; background:var(--bg); color:white; border:1px solid #444; border-radius:8px;">
-        </div>
-
-        <button id="startSplitBtn" class="btn" disabled>✂️ Split Video</button>
-        <div id="splitResults" class="preview-list"></div>
-      </div>
-    </div>
-
-    <div id="thumb" class="tool-section">
-      <div class="card" style="max-width: 600px; margin: 0 auto;">
-          <div style="text-align:center; margin-bottom:20px;">
-          <h3>Instant Thumbnail Generator</h3>
-          <p style="color:var(--text-muted); font-size:13px;">Extract high-quality covers from your video. No upload to server.</p>
-        </div>
-
-        <input type="file" id="thumbInput" accept="video/*" style="width:100%; padding:10px; background:#333; border-radius:8px;">
-        
-        <div class="thumb-canvas-container">
-          <video id="thumbVideo" class="thumb-source" playsinline muted></video>
-        </div>
-
-        <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
-          <input type="range" id="thumbSlider" min="0" max="100" value="0" style="flex:1;">
-          <span id="thumbTime" style="font-family:monospace;">00:00</span>
-        </div>
-
-        <button id="captureBtn" class="btn" style="background:var(--secondary);">📸 Capture & Download Frame</button>
-      </div>
-    </div>
-
-  </main>
-
-  <div id="aboutModal" class="app-modal">
-    <div class="modal-content">
-      <h3>About CropXPro</h3>
-      <p>CropXPro is your free, secure, all-in-one Creator Studio for vertical video, running entirely in your browser.</p>
-      <ul style="list-style-type: disc; margin-left: 20px; color: var(--text-muted);">
-        <li><strong>AI Auto-Crop:</strong> Instantly converts videos to 9:16 (Reels, TikTok) with Smart Zoom (Face Detection).</li>
-        <li><strong>Reels Splitter:</strong> Cut long videos into short segments (e.g., 15s, 30s) or define custom durations.</li>
-        <li><strong>Thumbnail Maker:</strong> Capture high-quality, frame-accurate cover images.</li>
-        <li><strong>Performance:</strong> Powered by WebAssembly (FFmpeg.wasm) for fast, local processing.</li>
-      </ul>
-      <button class="btn" onclick="document.getElementById('aboutModal').style.display='none'">Got It</button>
-    </div>
-  </div>
-
-  <div id="privacyModal" class="app-modal">
-    <div class="modal-content">
-      <h3>Privacy & Security</h3>
-      <p>1. <strong>No Cloud Uploads:</strong> CropXPro processes videos locally in your browser using WebAssembly. Your files never leave your device.</p>
-      <p>2. <strong>No Data Storage:</strong> We do not save your videos. Once you refresh, data is gone.</p>
-      <p>3. <strong>AdSense:</strong> We use Google cookies for ads.</p>
-      <button class="btn" onclick="document.getElementById('privacyModal').style.display='none'">Close</button>
-    </div>
-  </div>
-
-  <div class="ad-slot" style="margin: 0 auto;">
-    <span>Advertisement Space (Bottom)</span>
-  </div>
-
-  <footer>
-    <p>© 2024 CropXPro Studio. All rights reserved.</p>
-    <p style="opacity:0.5; font-size:11px;">Built for Creators. Not affiliated with Meta or Google.</p>
-  </footer>
-
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
-
-  <script>
-    // --- APP LOGIC ---
-    
-    // 1. Navigation
-    function switchTab(id, event) {
-      document.querySelectorAll('.tool-section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      if (event && event.target) {
-        event.target.classList.add('active');
-      }
-    }
-    
-    // Handle custom duration input visibility
-    function toggleCustomDuration(value) {
-      const customInput = document.getElementById('customSplitDuration');
-      if (value === 'custom') {
-        customInput.style.display = 'block';
-        customInput.focus();
-      } else {
-        customInput.style.display = 'none';
-      }
-    }
-
-    // 2. Variables & Init
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    let ffmpeg = null;
-    let cropFiles = [];
-    let splitFile = null;
-
-    const log = (msg) => {
-      const el = document.getElementById('logArea');
-      // Limit log entries to keep performance high
-      if (el.children.length > 50) {
-        el.removeChild(el.children[0]);
-      }
-      el.innerHTML += `<div>> ${msg}</div>`;
-      el.scrollTop = el.scrollHeight;
-    };
-
-    // 3. Load Engine (Updated for 0.10.x stability)
-    async function loadFFmpeg() {
-      if(ffmpeg) return;
-      log("Loading Engine (approx 25MB)...");
-      try {
-        // FIXED: Using UNPKG 0.10.0 Core path which is stable
-        ffmpeg = createFFmpeg({ 
-            log: true, 
-            corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js' 
-        });
-        
-        ffmpeg.setProgress(({ ratio }) => {
-            if (ratio < 1) {
-                log(`Processing: ${(ratio * 100).toFixed(1)}%`);
-            }
-        });
-        
-        await ffmpeg.load();
-        log("Engine Ready ✅");
-      } catch(e) {
-        log("Error loading engine. Ensure your server has COOP/COEP headers.");
-        console.error("FFmpeg Load Error:", e);
-      }
-    }
-
-    async function loadFaceAPI() {
-      // Using @vladmandic/face-api, the net is technically faceapi.nets
-      if(faceapi && !faceapi.nets.tinyFaceDetector.params) {
-        log("Loading AI Models...");
-        // Load the tiny face detector model
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/');
-        log("AI Models Ready ✅");
-      }
-    }
-
-    // --- TOOL 1: CROPPER LOGIC ---
-    const cropDrop = document.getElementById('cropDrop');
-    const cropInput = document.getElementById('cropInput');
-    
-    cropDrop.onclick = () => cropInput.click();
-    cropInput.onchange = (e) => handleCropFiles(e.target.files);
-    
-    // Drag & Drop Handlers
-    cropDrop.ondragover = (e) => { e.preventDefault(); cropDrop.style.borderColor = 'var(--secondary)'; };
-    cropDrop.ondragleave = (e) => { 
-        cropDrop.style.borderColor = cropFiles.length > 0 ? 'var(--success)' : 'rgba(255,255,255,0.2)'; 
-    };
-    cropDrop.ondrop = (e) => { 
-        e.preventDefault(); 
-        handleCropFiles(e.dataTransfer.files); 
-    };
-
-    // Renders the list of uploaded files, handles visual feedback, and button state
-    function renderCropFileList() {
-        const listEl = document.getElementById('cropFileList');
-        const dropZone = document.getElementById('cropDrop');
-        const startBtn = document.getElementById('startCropBtn');
-        
-        listEl.innerHTML = ''; // Clear current list
-        
-        if (cropFiles.length > 0) {
-            dropZone.classList.add('uploaded');
-            startBtn.disabled = false;
+        <!-- FOOTER & Compliance Section -->
+        <footer class="mt-12 pt-8 border-t border-gray-300 bg-white p-6 rounded-xl card">
             
-            cropFiles.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.setAttribute('data-id', item.id);
-                div.innerHTML = `
-                    <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.file.name}</span>
-                    <small style="margin-right: 10px; color: var(--text-muted);">${(item.file.size/1024/1024).toFixed(1)}MB</small>
-                    <button class="delete-btn" onclick="deleteCropFile('${item.id}')" title="Remove file">&times;</button>
-                `;
-                listEl.appendChild(div);
+            <!-- SEO Write-up -->
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold text-primary-dark mb-4">The Ultimate Shareable Sticker Creator</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    Welcome to **StickerGen AI**, the revolutionary tool designed to transform your favorite photos into custom, high-quality stickers ready for instant sharing on WhatsApp, Instagram, and other messaging platforms. Forget complex photo editors and desktop software. Our powerful AI technology, utilizing the latest in image generation, instantly cuts out your photo's subject, removes the background for perfect transparency, and applies a fun, stylistic filter to create truly unique **Cartoon Stickers**.
+                    Want something simpler? Our text and emoji modes let you quickly overlay messages and expressive emojis onto your photos. All generated stickers are delivered as transparent PNG files, optimized for sharing. Since we do not store any of your uploaded images or generated stickers, your privacy is fully protected, ensuring a fast, secure, and hassle-free creation process from start to finish. Start making your personalized sticker pack today and dominate the chat!
+                </p>
+            </section>
+
+            <!-- Privacy Policy -->
+            <section id="privacyPolicy">
+                <h2 class="text-2xl font-bold text-primary-dark mb-4">Privacy Policy & AdSense Compliance</h2>
+                <div class="text-sm text-gray-600 space-y-4">
+                    
+                    <p class="font-bold">Last Updated: November 29, 2025</p>
+
+                    <p>This privacy policy governs the manner in which **StickerGen AI** operates. By using this service, you agree to the terms herein, which are designed to comply with Google AdSense requirements, GDPR, and CCPA.</p>
+                    
+                    <h3 class="font-semibold text-base text-gray-800 mt-4">1. Data Collection and Non-Storage Policy</h3>
+                    <ul class="list-disc list-inside ml-4 space-y-2">
+                        <li>**User Content (Images):** We adhere to a strict **No-Saving Policy**. Images uploaded by the user and the resulting sticker files are processed *ephemerally* (temporarily) in the browser and via a third-party AI service (Google Gemini API) to generate the requested sticker. Once the sticker is displayed or downloaded, the image data is immediately discarded and **never stored** on our servers or permanent storage.</li>
+                        <li>**Personal Information (PII):** We do not intentionally collect or store any personally identifiable information (PII) such as names, email addresses, or phone numbers.</li>
+                    </ul>
+
+                    <h3 class="font-semibold text-base text-gray-800 mt-4">2. Third-Party Advertising (Google AdSense)</h3>
+                    <p>We use Google AdSense to serve advertisements when you visit our website. Google, as a third-party vendor, uses cookies (DART cookies) to serve ads based on your prior visits to our site and other sites on the Internet. This enables Google and its partners to serve targeted advertisements.</p>
+                    <ul class="list-disc list-inside ml-4 space-y-2">
+                        <li>**Opt-Out:** Users may opt out of personalized advertising by visiting Google's <a href="https://www.google.com/settings/ads" target="_blank" class="text-primary-blue hover:underline">Ads Settings</a>. Alternatively, you can direct users to opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="http://www.aboutads.info/" target="_blank" class="text-primary-blue hover:underline">www.aboutads.info</a>.</li>
+                        <li>**Ad Tracking:** The purpose of collecting data via AdSense cookies is for contextual and targeted advertising, which is the legal basis for processing under this policy.</li>
+                    </ul>
+
+                    <h3 class="font-semibold text-base text-gray-800 mt-4">3. External Links (Sharing)</h3>
+                    <p>The "Share" function utilizes the native Web Share API which may interact with external applications like WhatsApp or Instagram. We are not responsible for the privacy practices of these third-party applications.</p>
+                </div>
+            </section>
+        </footer>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        const canvas = document.getElementById('stickerCanvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const actionButtons = document.getElementById('actionButtons');
+        const statusMessage = document.getElementById('statusMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const generateIcon = document.getElementById('generateIcon');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const initialPrompt = document.getElementById('initialPrompt');
+        
+        // Customization Inputs
+        const textInputGroup = document.getElementById('textInputGroup');
+        const emojiInputGroup = document.getElementById('emojiInputGroup');
+        const stickerText = document.getElementById('stickerText');
+        const stickerEmoji = document.getElementById('stickerEmoji');
+
+        let uploadedImageBase64 = null;
+        let originalImage = null; // Store the original Image object for canvas operations
+
+        // ----------------------------------------------------
+        // API CONFIGURATION (MANDATORY)
+        // ----------------------------------------------------
+        const apiKey = ""; // Leave as-is. Canvas will provide it at runtime.
+        const MODEL_NAME = "gemini-2.5-flash-image-preview";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+
+        // Utility: Exponential Backoff for Robust API Calls
+        async function fetchWithExponentialBackoff(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) {
+                        return response;
+                    }
+                    // If 429 (Too Many Requests), wait and retry
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    console.warn(`Rate limit hit (429). Retrying in ${delay / 1000}s...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } catch (error) {
+                    console.error("Fetch error, retrying:", error);
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error("API request failed after multiple retries.");
+        }
+
+        // Utility: Converts File object to Base64 String
+        function convertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]); // Only data part
+                reader.onerror = error => reject(error);
             });
-        } else {
-            dropZone.classList.remove('uploaded');
-            startBtn.disabled = true;
         }
-    }
-    
-    // Global function to delete a file from the list
-    function deleteCropFile(id) {
-        const initialLength = cropFiles.length;
-        cropFiles = cropFiles.filter(item => item.id !== id);
-        if (cropFiles.length < initialLength) {
-            log(`Removed file ID: ${id}`);
-        }
-        renderCropFileList();
-    }
-    window.deleteCropFile = deleteCropFile; // Make globally accessible
 
-    function handleCropFiles(files) {
-      Array.from(files).forEach(file => {
-        if (!file.type.startsWith('video/')) return;
-        // Simple check to prevent duplicate uploads
-        if (cropFiles.some(item => item.file.name === file.name && item.file.size === file.size)) {
-             log(`Skipping potential duplicate file: ${file.name}`);
-             return;
-        }
-        cropFiles.push({ file, id: Math.random().toString(36).substr(2,9) });
-      });
-      renderCropFileList();
-    }
-
-    async function detectFace(file) {
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        video.src = URL.createObjectURL(file);
-        video.muted = true;
-        video.style.display = 'none';
-        document.body.appendChild(video);
-
-        // Seek to the 2 second mark or middle of the video for detection
-        video.onloadeddata = () => video.currentTime = Math.min(2, video.duration/2);
-        video.onseeked = async () => {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth; 
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-            
-            // Perform face detection using the tiny face detector
-            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions());
-            
-            // Clean up
-            URL.revokeObjectURL(video.src);
-            document.body.removeChild(video);
-            
-            resolve(detection ? { 
-              x: detection.box.x + detection.box.width/2, // Center of face
-              w: video.videoWidth 
-            } : null);
-          } catch(e) { 
-            log(`Error during face detection for ${file.name}.`);
-            console.error("Face API Error:", e);
-            // Resolve null if any error occurs during detection
-            resolve(null);
-          }
-        };
-        video.onerror = () => {
-            document.body.removeChild(video);
-            resolve(null);
-        };
-      });
-    }
-
-    document.getElementById('startCropBtn').onclick = async () => {
-      const btn = document.getElementById('startCropBtn');
-      btn.disabled = true;
-      document.getElementById('cropResults').innerHTML = ''; // Clear old results
-      await loadFFmpeg();
-      if (!ffmpeg) {
-        btn.disabled = false;
-        return; // Stop if engine failed to load
-      }
-      
-      const zoom = document.getElementById('optZoom').checked;
-      if (zoom) await loadFaceAPI();
-
-      const aspects = Array.from(document.querySelectorAll('.aspect-opt:checked')).map(c => c.value);
-      const safeMode = document.getElementById('optSafeMode').checked;
-      const normalize = document.getElementById('optAudioNorm').checked;
-      
-      for(const item of cropFiles) {
-        log(`Processing ${item.file.name}...`);
-        // 1. Face Detect (if enabled)
-        let faceX = null;
-        if(zoom) {
-            const faceData = await detectFace(item.file);
-            if(faceData) {
-                faceX = faceData.x / faceData.w; // Normalized 0-1
-                log(`  > Face detected at X: ${(faceX * 100).toFixed(0)}%`);
+        // ----------------------------------------------------
+        // UI AND FILE HANDLING
+        // ----------------------------------------------------
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                fileNameDisplay.textContent = `File loaded: ${file.name}`;
+                uploadedImageBase64 = await convertToBase64(file);
+                
+                // Draw initial image on canvas (as non-sticker preview)
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    drawPreview(img);
+                    initialPrompt.classList.add('hidden');
+                };
+                img.src = event.target.files[0].type.startsWith('image/') ? URL.createObjectURL(file) : '';
+                
+                generateBtn.disabled = false;
+                actionButtons.classList.add('hidden'); // Hide share/download until new sticker is made
+                statusMessage.textContent = "Ready to generate!";
             } else {
-                log(`  > No face detected. Defaulting to center crop.`);
+                fileNameDisplay.textContent = "No file selected.";
+                uploadedImageBase64 = null;
+                generateBtn.disabled = true;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                initialPrompt.classList.remove('hidden');
+            }
+        });
+
+        // Toggles visibility of text/emoji inputs based on radio selection
+        function updateControls() {
+            const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+            textInputGroup.classList.add('hidden');
+            emojiInputGroup.classList.add('hidden');
+
+            if (selectedType === 'text') {
+                textInputGroup.classList.remove('hidden');
+            } else if (selectedType === 'emoji') {
+                emojiInputGroup.classList.remove('hidden');
+            }
+        }
+        // Initial control setup
+        updateControls();
+        generateBtn.disabled = true; // Disable until a file is loaded
+
+        function setProcessingState(isProcessing) {
+            generateBtn.disabled = isProcessing || !uploadedImageBase64;
+            loadingSpinner.classList.toggle('hidden', !isProcessing);
+            generateIcon.classList.toggle('hidden', isProcessing);
+            if (isProcessing) {
+                statusMessage.textContent = "Processing image with AI...";
+            } else {
+                statusMessage.textContent = "";
             }
         }
         
-        // 2. FFmpeg Write
-        const inName = `in_${item.id}.mp4`;
-        try {
-            ffmpeg.FS('writeFile', inName, await fetchFile(item.file));
-        } catch(e) {
-            log(`ERROR: Could not write file to FFmpeg Virtual FS: ${e.message}`);
-            continue;
+        // ----------------------------------------------------
+        // CANVAS DRAWING LOGIC
+        // ----------------------------------------------------
+
+        // Draws the checkerboard background pattern
+        function drawCheckerboard(ctx, size = 16) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            for (let y = 0; y < height; y += size) {
+                for (let x = 0; x < width; x += size) {
+                    // Alternate colors
+                    if ((Math.floor(x / size) + Math.floor(y / size)) % 2 === 0) {
+                        ctx.fillStyle = '#ccc';
+                    } else {
+                        ctx.fillStyle = '#fff';
+                    }
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
         }
 
-        for(const ratio of aspects) {
-          const outName = `out_${item.id}_${ratio.replace(':','x')}.mp4`;
-          const [tw, th] = ratio.split(':').map(Number);
-          
-          let filters = [];
-          
-          // Crop Logic
-          let cropTxt = "";
-          let xPos = "(iw-ow)/2"; // Default center
-          
-          if(faceX !== null) {
-              // Formula: (video_width * normalized_face_x) - (output_width / 2)
-              // Clamp xPos to ensure crop box doesn't go off screen (0 to iw-ow)
-              xPos = `max(0, min(iw-ow, (iw*${faceX.toFixed(3)})-(ow/2)))`;
-          }
-
-          if(tw/th < 1) { // Vertical output (e.g., 9:16)
-              // Crop height to be max possible, then restrict width to match aspect ratio
-              cropTxt = `crop=w=min(iw, ih*(${tw}/${th})):h=ih:x=${xPos}:y=0`;
-          } else { // Horizontal/Square output (e.g., 1:1, 16:9)
-              // Crop width to be max possible, then restrict height to match aspect ratio
-              cropTxt = `crop=w=iw:h=min(ih, iw*(${th}/${tw})):x=0:y=(ih-oh)/2`;
-          }
-          filters.push(cropTxt);
-          
-          // Safe Mode (Resize) - Resizing before crop helps with complex operations, target 720p height
-          if(safeMode) filters.push("scale=-2:720");
-          
-          log(`  > Encoding ${ratio} for ${item.file.name}...`);
-          
-          // FFmpeg Arguments
-          let args = ['-i', inName];
-          args.push('-vf', filters.join(','));
-          
-          // Video quality settings (CRF 28 is high compression, faster)
-          args.push('-c:v', 'libx264', '-preset', 'superfast', '-crf', '28');
-          
-          // Audio settings
-          if(normalize) {
-              // Loudnorm filter for audio normalization
-              args.push('-af', 'loudnorm=I=-16:TP=-1.5:LRA=11');
-          } else {
-              args.push('-c:a', 'copy'); // Copy audio stream without re-encoding
-          }
-          args.push(outName);
-          
-          try {
-              await ffmpeg.run(...args);
-              // Read & Display
-              const data = ffmpeg.FS('readFile', outName);
-              addResult(new Blob([data.buffer], {type: 'video/mp4'}), `cropResults`, `${ratio}`);
-              ffmpeg.FS('unlink', outName);
-          } catch(e) {
-              log(`ERROR during encoding ${ratio}: ${e.message}`);
-          }
+        // Draws the image onto the canvas, centered and fitting
+        function drawPreview(img) {
+            drawCheckerboard(ctx); // Draw checkerboard first
+            
+            const canvasSize = canvas.width;
+            let ratio = Math.min(canvasSize / img.width, canvasSize / img.height);
+            let newWidth = img.width * ratio;
+            let newHeight = img.height * ratio;
+            let x = (canvasSize - newWidth) / 2;
+            let y = (canvasSize - newHeight) / 2;
+            
+            ctx.drawImage(img, x, y, newWidth, newHeight);
         }
-        ffmpeg.FS('unlink', inName);
-      }
-      log("All batch processing tasks complete. ✅");
-      btn.disabled = false;
-    };
 
-    // --- TOOL 2: SPLITTER LOGIC ---
-    const splitDrop = document.getElementById('splitDrop');
-    const splitInput = document.getElementById('splitInput');
-    
-    splitDrop.onclick = () => splitInput.click();
-    splitInput.onchange = (e) => {
-      if(e.target.files[0]) {
-        splitFile = e.target.files[0];
-        document.getElementById('splitFileDisplay').textContent = splitFile.name;
-        document.getElementById('startSplitBtn').disabled = false;
-        splitDrop.classList.add('uploaded');
-      }
-    };
+        // Draws text and emoji over the current canvas content
+        function drawOverlay(type) {
+            // Re-draw the original image (or the AI result) first
+            if (!originalImage) return;
 
-    document.getElementById('startSplitBtn').onclick = async () => {
-      const btn = document.getElementById('startSplitBtn');
-      btn.disabled = true;
-      document.getElementById('splitResults').innerHTML = ''; // Clear old results
-      await loadFFmpeg();
-      if (!ffmpeg || !splitFile) {
-        btn.disabled = false;
-        return;
-      }
-      
-      const durationSelect = document.getElementById('splitDuration').value;
-      const customDurationInput = document.getElementById('customSplitDuration');
-      let dur = 0;
-      if (durationSelect === 'custom') {
-          dur = parseFloat(customDurationInput.value);
-          if (isNaN(dur) || dur <= 1) {
-              log("ERROR: Please enter a valid custom duration (> 1 second).");
-              btn.disabled = false;
-              return;
-          }
-      } else {
-          dur = parseInt(durationSelect);
-      }
-      
-      const inName = "split_in.mp4";
-      log(`Writing file to memory: ${splitFile.name}`);
-      ffmpeg.FS('writeFile', inName, await fetchFile(splitFile));
-      
-      let segmentIndex = 0;
-      let start = 0;
-      const maxSegments = 100; // Increase max segments for safety
+            // Clear the canvas and redraw the background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCheckerboard(ctx);
+            
+            // Draw original image, full size for sticker feel
+            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
 
-      // Note: Splitting uses -c copy for fast, loss-less splitting.
-      while(segmentIndex < maxSegments) {
-        const outName = `seg_${segmentIndex+1}.mp4`;
-        log(`Splitting segment ${segmentIndex+1} (Start: ${start.toFixed(1)}s, Duration: ${dur}s)...`);
+            // Add white circular/rounded border effect
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 15;
+            ctx.lineJoin = 'round';
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#00000033'; // light shadow border
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (type === 'text') {
+                const text = stickerText.value.trim().toUpperCase();
+                if (text) {
+                    ctx.font = 'bold 80px Inter, sans-serif';
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 10;
+                    
+                    // Draw text shadow/outline
+                    ctx.strokeText(text, canvas.width / 2, canvas.height * 0.9);
+                    // Draw text fill
+                    ctx.fillText(text, canvas.width / 2, canvas.height * 0.9);
+                }
+            } else if (type === 'emoji') {
+                const emoji = stickerEmoji.value.trim();
+                if (emoji) {
+                    ctx.font = '120px Inter, sans-serif';
+                    // Draw the emoji in the top corner
+                    ctx.fillText(emoji, canvas.width * 0.85, canvas.height * 0.15);
+                }
+            }
+        }
         
-        try {
-          // -ss before -i for faster seeking; -t for duration; -c copy for speed
-          const result = await ffmpeg.run('-ss', `${start}`, '-i', inName, '-t', `${dur}`, '-c', 'copy', outName);
-          
-          // Check if file size is non-zero (to detect end of video)
-          const data = ffmpeg.FS('readFile', outName);
-          if (data.length === 0) {
-              log(`Segment ${segmentIndex+1} resulted in zero data. End of video reached.`);
-              ffmpeg.FS('unlink', outName); // Clean up empty file
-              break;
-          }
+        // ----------------------------------------------------
+        // GENERATION & API CALLS
+        // ----------------------------------------------------
 
-          addResult(new Blob([data.buffer], {type:'video/mp4'}), 'splitResults', `Part ${segmentIndex+1}`);
-          ffmpeg.FS('unlink', outName);
-          
-          start += dur;
-          segmentIndex++;
+        async function prepareAndGenerate() {
+            const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+            actionButtons.classList.add('hidden'); // Hide buttons while generating
 
-        } catch(e) { 
-          // Stop if error (likely end of video or ffmpeg error that we couldn't catch via file size)
-          log(`Segment ${segmentIndex+1} failed or end of video reached unexpectedly.`);
-          console.error("FFmpeg Split Error:", e);
-          break; 
-        } 
-      }
-      
-      ffmpeg.FS('unlink', inName);
-      btn.disabled = false;
-      log("Split Complete ✅");
-    };
+            if (!uploadedImageBase64) {
+                statusMessage.textContent = "Please upload an image first!";
+                return;
+            }
 
-    // --- TOOL 3: THUMBNAIL LOGIC (Canvas) ---
-    const thumbInput = document.getElementById('thumbInput');
-    const thumbVideo = document.getElementById('thumbVideo');
-    const thumbSlider = document.getElementById('thumbSlider');
-    
-    thumbInput.onchange = (e) => {
-      if (!e.target.files.length) return;
-      // Revoke previous URL to free memory
-      if (thumbVideo.src) URL.revokeObjectURL(thumbVideo.src); 
-
-      const url = URL.createObjectURL(e.target.files[0]);
-      thumbVideo.src = url;
-      // Add visual feedback for the Thumbnail Tool upload
-      document.querySelector('#thumb .card').style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
-      setTimeout(() => {
-        document.querySelector('#thumb .card').style.backgroundColor = 'var(--surface)';
-      }, 3000);
-    };
-    
-    thumbVideo.onloadedmetadata = () => {
-      thumbSlider.max = thumbVideo.duration;
-      thumbSlider.value = 0; // Reset slider
-      thumbVideo.currentTime = 0; // Go to start
-    };
-
-    thumbSlider.oninput = () => {
-      // Ensure we seek only when paused or meta-loaded to prevent jumping
-      if (thumbVideo.readyState >= 2) {
-        thumbVideo.currentTime = thumbSlider.value;
-      }
-      const m = Math.floor(thumbVideo.currentTime/60);
-      const s = Math.floor(thumbVideo.currentTime%60);
-      document.getElementById('thumbTime').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    };
-
-    thumbVideo.onseeked = () => {
-        const m = Math.floor(thumbVideo.currentTime/60);
-        const s = Math.floor(thumbVideo.currentTime%60);
-        document.getElementById('thumbTime').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    };
-
-
-    document.getElementById('captureBtn').onclick = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = thumbVideo.videoWidth;
-      canvas.height = thumbVideo.videoHeight;
-      canvas.getContext('2d').drawImage(thumbVideo, 0, 0, canvas.width, canvas.height);
-      // Use the current timestamp in the filename
-      const currentTimeFormatted = document.getElementById('thumbTime').textContent.replace(':', '-');
-      canvas.toBlob(blob => {
-        if (!blob) {
-            log('Error capturing frame. Is the video fully loaded?');
-            return;
+            if (selectedType === 'cartoon') {
+                await generateAISticker();
+            } else if (selectedType === 'text' || selectedType === 'emoji') {
+                // For text/emoji, we only need the base image to draw on
+                // We'll rely on the existing originalImage object and client-side drawOverlay
+                if (originalImage) {
+                    drawOverlay(selectedType);
+                    statusMessage.textContent = "Sticker generated!";
+                    actionButtons.classList.remove('hidden');
+                } else {
+                    statusMessage.textContent = "Error: Original image data missing.";
+                }
+            }
         }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `cropxpro_thumb_${currentTimeFormatted}.jpg`;
-        a.click();
-        
-        // Clean up memory
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-      }, 'image/jpeg', 0.95); // High quality jpeg
-    };
 
-    // --- SHARED UTILS ---
-    function addResult(blob, containerId, label) {
-      const url = URL.createObjectURL(blob);
-      const div = document.createElement('div');
-      div.className = 'preview-item';
-      // Use the URL helper for proper cleanup on download
-      div.innerHTML = `
-        <video controls playsinline muted src="${url}"></video>
-        <div class="preview-actions">
-          <strong>${label}</strong><br>
-          <button class="btn" style="margin-top:5px; width:auto; padding:5px 10px;" onclick="window.downloadBlob('${url}', 'cropxpro_${label.replace(/\s/g, '_').toLowerCase()}.mp4')">⬇️ Save</button>
-        </div>
-      `;
-      document.getElementById(containerId).appendChild(div);
-    }
+        async function generateAISticker() {
+            setProcessingState(true);
+            
+            const prompt = "Convert the subject of this photo into a vibrant, high-quality cartoon style sticker. The background must be completely removed, resulting in a transparent PNG. The subject should be styled as a cool, shareable sticker. The final image size must be 512x512 with a transparent background.";
+            
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                mimeType: fileInput.files[0].type,
+                                data: uploadedImageBase64
+                            }
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                },
+            };
 
-    window.downloadBlob = (url, name) => {
-      const a = document.createElement('a');
-      a.href = url; a.download = name; a.click();
-      
-      // Cleanup the object URL after download
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    };
+            try {
+                const response = await fetchWithExponentialBackoff(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-    // Make utility functions globally accessible
-    window.switchTab = switchTab;
-    window.toggleCustomDuration = toggleCustomDuration;
+                const result = await response.json();
+                
+                const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
 
-  </script>
+                if (!base64Data) {
+                    const errorReason = result?.candidates?.[0]?.finishReason || 'Unknown error. Check the prompt or image.';
+                    statusMessage.textContent = `AI generation failed: ${errorReason}`;
+                    return;
+                }
+
+                const imageUrl = `data:image/png;base64,${base64Data}`;
+                
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img; // Update originalImage with the new AI generated sticker
+                    drawPreview(img);
+                    statusMessage.textContent = "✨ Cartoon Sticker Ready! Share or Download!";
+                    actionButtons.classList.remove('hidden');
+                };
+                img.onerror = () => {
+                    statusMessage.textContent = "Error loading generated image.";
+                };
+                img.src = imageUrl;
+
+            } catch (error) {
+                console.error("Gemini API error:", error);
+                statusMessage.textContent = `Error: API call failed. ${error.message}`;
+            } finally {
+                setProcessingState(false);
+            }
+        }
+
+        // ----------------------------------------------------
+        // EXPORT AND SHARING
+        // ----------------------------------------------------
+
+        // Function to trigger a download
+        function downloadSticker() {
+            // Get the final canvas data as a blob
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ai-sticker.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                statusMessage.textContent = "Download complete!";
+            }, 'image/png');
+        }
+
+        // Function to use the Web Share API (Best for WhatsApp/Instagram sharing)
+        async function shareSticker() {
+            if (navigator.share && navigator.canShare) {
+                try {
+                    // Convert canvas to Blob
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    const file = new File([blob], "ai-sticker.png", { type: "image/png" });
+                    
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'My AI Sticker',
+                            text: 'Check out this awesome sticker I made with StickerGen AI!',
+                        });
+                        statusMessage.textContent = "Sticker shared successfully!";
+                    } else {
+                        statusMessage.textContent = "Cannot share files on this device/browser. Please download manually.";
+                        downloadSticker(); // Fallback to download
+                    }
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error sharing:', error);
+                        statusMessage.textContent = "Sharing failed. Please try downloading.";
+                        downloadSticker(); // Fallback to download on error
+                    }
+                }
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                statusMessage.textContent = "Native sharing not supported. Initiating download...";
+                downloadSticker();
+            }
+        }
+    </script>
 </body>
 </html>
