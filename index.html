@@ -71,56 +71,169 @@
   <!-- JSZip for sticker-pack export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-j6P/8o4HnOQ5pKc1uM3u1z8zrH6V7gYQHc6Bz1w1lC1mFfM6a3sZq+Jp/5lX0r3f0YQkzktm7ERkF7u6dVx7xA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+  <!-- ===== Customized Colorful Styles (only visual changes) ===== -->
   <style>
-    body { font-family: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial; background:#f4f7f9; color:#0f172a; }
-    .card { box-shadow: 0 6px 18px rgba(15,23,42,0.06); border-radius: 14px; }
-    .preview-box { height: 420px; } /* shorter preview */
-    #stickerCanvas { border-radius: 12px; display:block; background: transparent; }
-    @media (max-width:768px) { .preview-box { height:360px } }
-    /* Cookie consent bar */
-    .cookie-consent { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 9999; background: #fff; border-radius: 10px; box-shadow: 0 8px 30px rgba(2,6,23,0.2); padding: 12px; display:flex; align-items:center; gap:12px; }
+    :root{
+      --bg-1: linear-gradient(135deg,#fff7f0 0%, #f3f0ff 100%);
+      --accent-1: #ff6b6b;
+      --accent-2: #6b8dff;
+      --accent-3: #ffd166;
+      --card-grad: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.75));
+      --glass: rgba(255,255,255,0.6);
+    }
+
+    html,body { height:100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial;
+      background: radial-gradient(circle at 10% 10%, rgba(255,107,107,0.06), transparent 10%),
+                  radial-gradient(circle at 90% 90%, rgba(107,141,255,0.04), transparent 12%),
+                  #f8fafc;
+      color: #07203a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* container card */
+    .card {
+      background: var(--card-grad);
+      border: 1px solid rgba(15,23,42,0.04);
+      box-shadow: 0 10px 30px rgba(8,20,60,0.07);
+      border-radius: 16px;
+    }
+
+    header { padding: 22px 6px; margin-bottom: 8px; }
+    header h1 {
+      font-size: 2.4rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display:inline-block;
+    }
+    header p { color: #334155; margin-top:6px; }
+
+    /* Top ad styling */
+    .ad-unit {
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,209,136,0.12), rgba(107,141,255,0.06));
+      display:flex; align-items:center; justify-content:center;
+      border: 1px dashed rgba(16,24,40,0.06);
+    }
+
+    /* Controls column styling */
+    .controls .label {
+      color: #0f172a; font-weight:600;
+    }
+    input[type="file"] { background: linear-gradient(90deg,#fff,#fff); }
+    .preview-box { height: 420px; border-radius: 12px; }
+
+    /* Make buttons colorful & animated */
+    .btn-primary {
+      background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color: white;
+      box-shadow: 0 8px 20px rgba(107,141,255,0.12);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(107,141,255,0.18); }
+    .btn-accent {
+      background: linear-gradient(90deg,var(--accent-3),#ffd9a8);
+      color: #07203a;
+      font-weight:600;
+      transition: transform .12s ease;
+    }
+    .btn-accent:hover { transform: translateY(-2px); }
+
+    /* Colorful small UI elements */
+    .chip {
+      display:inline-flex; align-items:center; gap:8px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+      border-radius: 999px; padding:6px 10px; font-weight:600; color:#0b2545;
+      border: 1px solid rgba(11,37,69,0.05);
+      box-shadow: 0 4px 14px rgba(11,37,69,0.04);
+    }
+
+    /* Make inputs pop */
+    input, select, textarea { border-radius: 10px; border: 1px solid rgba(15,23,42,0.06); padding:10px; background: rgba(255,255,255,0.9); }
+    input:focus, textarea:focus { outline: none; box-shadow: 0 6px 20px rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.4); }
+
+    /* Preview area */
+    .preview-box { background: linear-gradient(180deg,#ffffff,#fbfdff); padding:14px; border: 1px solid rgba(15,23,42,0.03); }
+    #stickerCanvas {
+      width:100%; height:auto; max-width:560px; max-height:560px; border-radius:12px;
+      border: 6px solid rgba(255,255,255,0.9);
+      box-shadow: 0 12px 40px rgba(15,23,42,0.06), inset 0 -2px 12px rgba(11,37,69,0.02);
+      transition: transform .12s ease;
+    }
+
+    #stickerCanvas:hover { transform: translateY(-4px) scale(1.01); }
+
+    /* Status */
+    #statusMessage { min-height: 20px; color: #334155; }
+
+    /* Fancy small text */
+    .muted { color:#64748b; font-size:0.92rem; }
+
+    /* Action buttons */
+    .action-row button { border-radius: 12px; padding:10px 12px; font-weight:700; }
+
+    .rounded-glow {
+      position:relative;
+      border-radius:14px;
+      overflow:hidden;
+    }
+    .rounded-glow:before {
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(255,107,107,0.06), rgba(107,141,255,0.06));
+      pointer-events:none;
+    }
+
+    /* Footer cards */
+    footer .card { padding:18px; }
+
+    /* Cookie consent styling improved */
+    .cookie-consent { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 9999; background: linear-gradient(90deg,#ffffff,#fffaf0); border-radius: 12px; padding: 12px; display:flex; align-items:center; gap:12px; border:1px solid rgba(11,37,69,0.06); box-shadow: 0 12px 40px rgba(11,37,69,0.08); }
+
+    /* Responsive tweaks */
+    @media (max-width: 900px) {
+      header h1 { font-size: 1.9rem; }
+      #stickerCanvas { max-width:420px; max-height:420px; border-width:5px; }
+      .preview-box { height:360px; }
+    }
   </style>
+  <!-- ===== end visual-only styles ===== -->
 </head>
 
 <body class="p-4 md:p-8">
   <div class="container mx-auto max-w-6xl">
     <!-- Header -->
     <header class="text-center mb-6">
-      <h1 class="text-4xl font-extrabold text-primary-dark mb-1">🚀 StickerGen AI</h1>
-      <p class="text-gray-600">Create WhatsApp & Instagram stickers in seconds — AI cartoonify, text & emoji overlays, transparent PNG export.</p>
+      <h1 class="text-4xl font-extrabold mb-1">🚀 StickerGen AI</h1>
+      <p class="text-gray-600 muted">Create WhatsApp & Instagram stickers in seconds — AI cartoonify, text & emoji overlays, transparent PNG export.</p>
     </header>
 
     <!-- Top Ad (Adaptive / 728x90) -->
-    <div class="ad-unit h-24 md:h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-6 card border border-gray-200">
+    <div class="ad-unit h-24 md:h-28 rounded-lg flex items-center justify-center mb-6 card">
       <!-- Replace with your AdSense code -->
-      <strong class="text-gray-500">AD SENSE UNIT TOP (728x90 / Adaptive) — paste AdSense ins here</strong>
-      <!-- Example:
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-XXXX"
-           data-ad-slot="YYYY"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      -->
+      <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12h16" stroke="#6b8dff" stroke-width="2" stroke-linecap="round"/></svg><span class="muted">AD SENSE UNIT TOP (728x90 / Adaptive)</span></div>
     </div>
 
     <!-- Main grid -->
     <div class="grid lg:grid-cols-3 gap-8">
       <!-- Controls column -->
-      <div class="lg:col-span-1 card p-6">
+      <div class="lg:col-span-1 card p-6 controls rounded-glow">
         <h2 class="text-2xl font-semibold mb-4">1 — Upload & Customize</h2>
 
         <label class="block text-sm font-medium text-gray-700 mb-2">Select an Image (PNG / JPG / WEBP)</label>
-        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="w-full text-sm p-2 mb-2 rounded-lg border border-gray-300" />
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="w-full text-sm mb-2" />
         <p id="fileNameDisplay" class="text-xs text-gray-500 italic mb-3">No file selected.</p>
 
         <div class="mb-3">
           <label class="text-sm font-medium text-gray-700">Sticker Type</label>
           <div class="flex gap-2 mt-2">
-            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="cartoon" checked onchange="updateControls()" /> <span>✨ AI Cartoon</span></label>
-            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="text" onchange="updateControls()" /> <span>💬 Text</span></label>
-            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="emoji" onchange="updateControls()" /> <span>😂 Emoji</span></label>
+            <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-pink-50 to-blue-50 border border-transparent"><input name="stickerType" type="radio" value="cartoon" checked onchange="updateControls()" /> <span>✨ AI Cartoon</span></label>
+            <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-amber-50 to-lime-50"><input name="stickerType" type="radio" value="text" onchange="updateControls()" /> <span>💬 Text</span></label>
+            <label class="flex items-center gap-2 p-2 rounded-lg cursor-pointer bg-gradient-to-r from-rose-50 to-cyan-50"><input name="stickerType" type="radio" value="emoji" onchange="updateControls()" /> <span>😂 Emoji</span></label>
           </div>
         </div>
 
@@ -147,39 +260,31 @@
         </div>
 
         <div class="mb-4">
-          <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-3 font-bold bg-primary-blue text-white rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
-            <svg id="generateIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            <svg id="loadingSpinner" class="animate-spin w-5 h-5 hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-3 font-bold btn-primary rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+            <svg id="generateIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none"><path stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <svg id="loadingSpinner" class="animate-spin w-5 h-5 hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"></circle><path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
             <span id="generateText">Generate Sticker</span>
           </button>
 
           <!-- In-content ad (high RPM spot) -->
-          <div class="my-3 bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
-            <strong class="text-gray-500">AD SENSE (In-content) — paste AdSense code here</strong>
-            <!-- Example placeholder:
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-XXXX"
-                 data-ad-slot="ZZZZ"
-                 data-ad-format="auto"></ins>
-            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            -->
+          <div class="my-3 bg-gradient-to-r from-white to-yellow-50 p-3 rounded-lg border border-yellow-100 text-center">
+            <strong class="text-gray-600">AD SENSE (In-content) — paste AdSense code here</strong>
           </div>
 
-          <p id="statusMessage" class="text-center text-sm mt-2 text-gray-600 h-6"></p>
+          <p id="statusMessage" class="text-center text-sm mt-2 muted h-6"></p>
         </div>
 
-        <div id="actionButtons" class="hidden flex gap-3">
-          <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-2 bg-gray-100 rounded-lg">Download PNG</button>
-          <button id="addToPackBtn" onclick="addToPack()" class="flex-1 py-2 bg-yellow-500 text-white rounded-lg">➕ Add to Pack</button>
-          <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-2 bg-green-500 text-white rounded-lg">Share</button>
+        <div id="actionButtons" class="hidden flex gap-3 action-row">
+          <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-2 bg-white border border-gray-200 rounded-lg">Download PNG</button>
+          <button id="addToPackBtn" onclick="addToPack()" class="flex-1 py-2 btn-accent rounded-lg">➕ Add to Pack</button>
+          <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-2" style="background:linear-gradient(90deg,#34d399,#60a5fa); color:#fff; border-radius:12px;">Share</button>
         </div>
 
-        <div class="mt-4 space-y-2 text-xs text-gray-600">
+        <div class="mt-4 space-y-2 text-xs muted">
           <div class="flex justify-between"><span>Pack items:</span><strong id="packCount">0</strong></div>
           <div class="flex gap-2">
-            <button id="downloadPackBtn" onclick="downloadPack()" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg">Download Pack (ZIP)</button>
-            <button onclick="clearPack()" class="py-2 px-3 bg-gray-200 rounded-lg">Clear</button>
+            <button id="downloadPackBtn" onclick="downloadPack()" class="flex-1 py-2" style="background:linear-gradient(90deg,#7c3aed,#06b6d4); color:#fff; border-radius:12px;">Download Pack (ZIP)</button>
+            <button onclick="clearPack()" class="py-2 px-3 bg-gray-100 rounded-lg">Clear</button>
           </div>
           <div class="text-xxs text-gray-500 mt-2">Tip: App runs locally if no server API key is configured.</div>
         </div>
@@ -187,15 +292,15 @@
 
       <!-- Preview + Ads -->
       <div class="lg:col-span-2 space-y-6">
-        <div class="card p-4 preview-box">
+        <div class="card p-4 preview-box rounded-glow">
           <div class="flex items-center justify-between mb-3 px-2">
             <h3 class="text-lg font-semibold">2 — Sticker Preview</h3>
-            <div class="text-sm text-gray-500">Canvas: 512×512 (export)</div>
+            <div class="text-sm text-gray-500 muted">Canvas: 512×512 (export)</div>
           </div>
 
-          <div class="relative h-full flex items-center justify-center bg-gray-100 rounded-xl p-3">
+          <div class="relative h-full flex items-center justify-center rounded-xl p-3" style="background: linear-gradient(180deg,#fef3c7,#eff6ff); border:1px solid rgba(11,37,69,0.02);">
             <canvas id="stickerCanvas" width="512" height="512" class="shadow-inner"></canvas>
-            <div id="initialPrompt" class="absolute text-center text-gray-500 pointer-events-none">
+            <div id="initialPrompt" class="absolute text-center text-gray-600 pointer-events-none">
               <svg class="w-14 h-14 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
               <p>Upload a photo and click <strong>Generate Sticker</strong>.</p>
             </div>
@@ -203,17 +308,17 @@
         </div>
 
         <!-- Native/medium rectangle ad -->
-        <div class="ad-unit h-44 bg-gray-100 rounded-xl flex items-center justify-center card border border-gray-200">
-          <strong class="text-gray-500">AD SENSE UNIT (336x280 / Native) — paste code here</strong>
+        <div class="ad-unit h-44 rounded-xl flex items-center justify-center card">
+          <div class="chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 4v16" stroke="#ffd166" stroke-width="2" stroke-linecap="round"/></svg><span class="muted">AD SENSE UNIT (336x280 / Native)</span></div>
         </div>
       </div>
     </div>
 
     <!-- Footer ad & content -->
     <div class="mt-8 grid lg:grid-cols-2 gap-4">
-      <div class="card p-4">
+      <div class="card p-4 rounded-glow">
         <h3 class="text-lg font-semibold mb-2">About StickerGen AI — SEO-friendly writeup</h3>
-        <p class="text-sm text-gray-700 leading-relaxed">
+        <p class="text-sm muted leading-relaxed">
           StickerGen AI converts your photos into high-quality, transparent PNG stickers ready for WhatsApp and Instagram.
           Use the <strong>AI Cartoon</strong> mode for stylized cartoons, or use <strong>Text</strong> and <strong>Emoji</strong> modes to personalize stickers quickly.
           The app emphasizes privacy — processing happens client-side when possible and images are not stored on our servers.
@@ -222,31 +327,31 @@
         <p class="text-xs text-gray-500 mt-3">Tip: Use short text (<=20 chars) and high-contrast photos for best cartoon results.</p>
       </div>
 
-      <div class="card p-4">
+      <div class="card p-4 rounded-glow">
         <h3 class="text-lg font-semibold mb-2">AD SENSE (Footer) — Good RPM spot</h3>
-        <div class="bg-gray-50 p-3 rounded border border-gray-200 text-center">
-          <strong class="text-gray-500">AD SENSE UNIT (Footer) — paste AdSense snippet here</strong>
+        <div class="bg-gradient-to-r from-white to-slate-50 p-3 rounded border border-gray-100 text-center">
+          <strong class="text-gray-600">AD SENSE UNIT (Footer) — paste AdSense snippet here</strong>
         </div>
       </div>
     </div>
 
-    <footer class="mt-8 p-6 card">
+    <footer class="mt-8 p-6 card rounded-glow">
       <div class="space-y-4">
         <h4 class="text-xl font-semibold">Privacy Policy & AdSense Compliance</h4>
-        <p class="text-sm text-gray-700">Last Updated: Nov 29, 2025</p>
+        <p class="text-sm muted">Last Updated: Nov 29, 2025</p>
 
         <div class="text-sm text-gray-600 space-y-3">
           <strong>1. Data handling & No-Storage</strong>
-          <p>StickerGen AI processes images client-side when possible. Uploaded images are used only to generate stickers and are not stored persistently by this site. If you configure a third-party AI server to process images (by adding an API key), images may be transmitted to that provider — ensure the provider's data policy meets your requirements before enabling server processing.</p>
+          <p class="muted">StickerGen AI processes images client-side when possible. Uploaded images are used only to generate stickers and are not stored persistently by this site. If you configure a third-party AI server to process images (by adding an API key), images may be transmitted to that provider — ensure the provider's data policy meets your requirements before enabling server processing.</p>
 
           <strong>2. Third-party services & ads</strong>
-          <p>We use Google AdSense to display ads. Google, as a third-party vendor, may use cookies to serve ads based on the user's previous visits to our site and other sites. To opt out of personalized ads, users may visit Google's Ads Settings. We do not sell personal data.</p>
+          <p class="muted">We use Google AdSense to display ads. Google, as a third-party vendor, may use cookies to serve ads based on the user's previous visits to our site and other sites. To opt out of personalized ads, users may visit Google's Ads Settings. We do not sell personal data.</p>
 
           <strong>3. Third-party sharing</strong>
-          <p>Sharing uses native Web Share APIs and external apps; we are not responsible for their data practices.</p>
+          <p class="muted">Sharing uses native Web Share APIs and external apps; we are not responsible for their data practices.</p>
 
           <strong>4. Rights & requests</strong>
-          <p>If you wish to request deletion of stored data or exercise rights under GDPR/CCPA, contact the site owner at <em>privacy@example.com</em>. Note: by default the site does not store images; the email is for any account or analytic requests.</p>
+          <p class="muted">If you wish to request deletion of stored data or exercise rights under GDPR/CCPA, contact the site owner at <em>privacy@example.com</em>. Note: by default the site does not store images; the email is for any account or analytic requests.</p>
         </div>
       </div>
     </footer>
@@ -264,12 +369,12 @@
   <div id="cookieConsent" class="cookie-consent hidden">
     <div class="flex-1 text-sm text-gray-800">We use cookies & third-party ads to improve experience and serve ads. By continuing you accept our <a href="#privacyPolicy" class="underline">privacy policy</a>.</div>
     <div class="flex gap-2">
-      <button onclick="acceptCookies()" class="px-3 py-1 bg-primary-blue text-white rounded">Accept</button>
+      <button onclick="acceptCookies()" class="px-3 py-1" style="background:linear-gradient(90deg,#06b6d4,#7c3aed); color:#fff; border-radius:8px;">Accept</button>
       <button onclick="declineCookies()" class="px-3 py-1 bg-gray-100 rounded">Decline</button>
     </div>
   </div>
 
-  <!-- MAIN SCRIPT (improved, includes all features) -->
+  <!-- MAIN SCRIPT (unchanged behavior) -->
   <script>
   /********** StickerGen AI — full script **********/
   const canvas = document.getElementById('stickerCanvas');
