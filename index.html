@@ -1,547 +1,582 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Sticker Maker - Cartoon, Text & Emoji for WhatsApp/Instagram</title>
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Instantly convert your photos into shareable WhatsApp and Instagram stickers! Use AI to create transparent background cartoon stickers, or add custom text and emojis. Free, fast, and secure.">
-    <meta name="keywords" content="sticker maker, whatsapp stickers, instagram stickers, cartoonify photo, transparent background, AI sticker, free sticker creator, emoji sticker">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom styles for a polished, app-like feel */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f7f9;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI StickerGen — Cartoon, Text & Emoji for WhatsApp/Instagram</title>
+  <meta name="description" content="Instantly convert photos into shareable stickers. AI server + fast in-browser fallback cartoonifier, transparent PNG output, sticker packs." />
+  <meta name="keywords" content="sticker maker, whatsapp stickers, cartoonify, transparent png, ai sticker, webp support" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- JSZip (sticker pack ZIP) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-j6P/8o4HnOQ5pKc1uM3u1z8zrH6V7gYQHc6Bz1w1lC1mFfM6a3sZq+Jp/5lX0r3f0YQkzktm7ERkF7u6dVx7xA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, "Helvetica Neue", Arial; background:#f4f7f9; }
+    .card { box-shadow: 0 6px 18px rgba(15,23,42,0.06); border-radius: 14px; }
+    .preview-box { height: 420px; } /* shortened vertical preview */
+    #stickerCanvas { border-radius: 12px; display:block; }
+    @media (max-width:768px) { .preview-box { height:360px } }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary-blue': '#10b981',
+            'primary-dark': '#064e3b'
+          }
         }
-        .container {
-            max-width: 1400px;
-        }
-        .card {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-        }
-        #stickerCanvas {
-            border: 2px dashed #cbd5e1;
-            background-color: #e2e8f0; /* Checkerboard simulation background */
-        }
-        /* Mobile-first adjustments */
-        @media (max-width: 767px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            .ad-unit {
-                height: 100px;
-            }
-        }
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#10b981', /* Emerald/Teal look */
-                        'primary-dark': '#064e3b',
-                        'secondary-gray': '#e2e8f0',
-                    }
-                }
-            }
-        }
-    </script>
+      }
+    }
+  </script>
 </head>
-<body class="p-4 md:p-8 bg-gray-50">
+<body class="p-4 md:p-8">
 
-    <div class="container mx-auto">
-        
-        <!-- HEADER & TOP AD UNIT -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-extrabold text-primary-dark mb-2">
-                🚀 StickerGen AI
-            </h1>
-            <p class="text-xl text-gray-600">The quickest way to turn photos into shareable stickers.</p>
-        </header>
+  <div class="container mx-auto max-w-6xl">
+    <header class="text-center mb-6">
+      <h1 class="text-4xl font-extrabold text-primary-dark mb-1">🚀 StickerGen AI</h1>
+      <p class="text-gray-600">Fast stickers for WhatsApp & Instagram — server AI + fallback cartoonifier.</p>
+    </header>
 
-        <!-- AdSense Placeholder 1 (Large Banner - Top/Center) -->
-        <div class="ad-unit h-24 md:h-32 bg-secondary-gray flex items-center justify-center rounded-lg mb-8 border border-gray-300">
-            <p class="text-gray-500 font-semibold text-lg">AD SENSE UNIT 1 (728x90 or Adaptive)</p>
-        </div>
-
-        <!-- MAIN APP GRID -->
-        <div class="grid main-grid lg:grid-cols-3 gap-8">
-
-            <!-- LEFT COLUMN: CONTROLS (Always visible) -->
-            <div class="lg:col-span-1 bg-white p-6 rounded-xl card h-fit sticky top-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">1. Upload & Customize</h2>
-
-                <!-- File Upload -->
-                <div class="mb-6">
-                    <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">Select an Image (PNG or JPG)</label>
-                    <input type="file" id="fileInput" accept="image/png, image/jpeg" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue file:text-white hover:file:bg-primary-dark transition duration-150 rounded-lg border border-gray-300 p-2">
-                    <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 italic">No file selected.</p>
-                </div>
-                
-                <!-- Sticker Type Selection -->
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">2. Choose Sticker Type</h3>
-                <div class="flex flex-wrap gap-4 mb-6" id="stickerTypeControls">
-                    
-                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
-                        <input type="radio" name="stickerType" value="cartoon" checked class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
-                        <span class="font-medium">✨ AI Cartoon Sticker</span>
-                    </label>
-
-                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
-                        <input type="radio" name="stickerType" value="text" class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
-                        <span class="font-medium">💬 Text Overlay Sticker</span>
-                    </label>
-
-                    <label class="flex items-center space-x-2 p-3 bg-secondary-gray rounded-lg cursor-pointer hover:bg-gray-300 transition duration-150">
-                        <input type="radio" name="stickerType" value="emoji" class="text-primary-blue focus:ring-primary-dark" onchange="updateControls()">
-                        <span class="font-medium">😂 Emoji Overlay Sticker</span>
-                    </label>
-                </div>
-
-                <!-- Customization Inputs -->
-                <div id="customizationSection" class="mb-6">
-                    <!-- Default for Cartoon: No extra inputs needed -->
-                    <div id="textInputGroup" class="hidden">
-                        <label for="stickerText" class="block text-sm font-medium text-gray-700 mb-2">Sticker Text</label>
-                        <input type="text" id="stickerText" maxlength="20" placeholder="Type a short message (max 20 chars)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue">
-                    </div>
-                    <div id="emojiInputGroup" class="hidden">
-                        <label for="stickerEmoji" class="block text-sm font-medium text-gray-700 mb-2">Sticker Emoji</label>
-                        <input type="text" id="stickerEmoji" maxlength="2" placeholder="Example: 🔥 or 🥳" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue">
-                    </div>
-                </div>
-
-                <!-- Generate Button -->
-                <div class="mb-4">
-                    <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-4 text-xl font-bold bg-primary-blue text-white rounded-xl hover:bg-primary-dark transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
-                        <svg id="generateIcon" class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        <svg id="loadingSpinner" class="animate-spin w-6 h-6 mr-2 text-white hidden" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Generate Sticker
-                    </button>
-                    <p id="statusMessage" class="text-center text-sm mt-3 text-gray-600 h-5"></p>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div id="actionButtons" class="flex gap-4 hidden">
-                    <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-3 text-lg font-semibold bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition duration-150">
-                        Download PNG
-                    </button>
-                    <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-3 text-lg font-semibold bg-green-500 text-white rounded-xl hover:bg-green-600 transition duration-150">
-                        Share <span class="hidden sm:inline">via WhatsApp/IG</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: PREVIEW & ADS -->
-            <div class="lg:col-span-2">
-                <div class="bg-white p-6 rounded-xl card mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">3. Sticker Preview</h2>
-                    <div class="relative flex items-center justify-center w-full aspect-square bg-gray-100 rounded-lg p-2">
-                        <!-- Sticker Canvas -->
-                        <canvas id="stickerCanvas" width="512" height="512" class="w-full h-full max-w-sm max-h-sm rounded-xl"></canvas>
-                        <div id="initialPrompt" class="absolute text-center text-gray-500 pointer-events-none">
-                            <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <p>Upload a photo and click 'Generate' to see your sticker here.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- AdSense Placeholder 2 (Square/Native Ad) -->
-                <div class="ad-unit h-64 bg-secondary-gray flex items-center justify-center rounded-xl border border-gray-300 mb-8">
-                    <p class="text-gray-500 font-semibold text-lg">AD SENSE UNIT 2 (336x280 or Native)</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER & Compliance Section -->
-        <footer class="mt-12 pt-8 border-t border-gray-300 bg-white p-6 rounded-xl card">
-            
-            <!-- SEO Write-up -->
-            <section class="mb-8">
-                <h2 class="text-2xl font-bold text-primary-dark mb-4">The Ultimate Shareable Sticker Creator</h2>
-                <p class="text-gray-700 leading-relaxed">
-                    Welcome to **StickerGen AI**, the revolutionary tool designed to transform your favorite photos into custom, high-quality stickers ready for instant sharing on WhatsApp, Instagram, and other messaging platforms. Forget complex photo editors and desktop software. Our powerful AI technology, utilizing the latest in image generation, instantly cuts out your photo's subject, removes the background for perfect transparency, and applies a fun, stylistic filter to create truly unique **Cartoon Stickers**.
-                    Want something simpler? Our text and emoji modes let you quickly overlay messages and expressive emojis onto your photos. All generated stickers are delivered as transparent PNG files, optimized for sharing. Since we do not store any of your uploaded images or generated stickers, your privacy is fully protected, ensuring a fast, secure, and hassle-free creation process from start to finish. Start making your personalized sticker pack today and dominate the chat!
-                </p>
-            </section>
-
-            <!-- Privacy Policy -->
-            <section id="privacyPolicy">
-                <h2 class="text-2xl font-bold text-primary-dark mb-4">Privacy Policy & AdSense Compliance</h2>
-                <div class="text-sm text-gray-600 space-y-4">
-                    
-                    <p class="font-bold">Last Updated: November 29, 2025</p>
-
-                    <p>This privacy policy governs the manner in which **StickerGen AI** operates. By using this service, you agree to the terms herein, which are designed to comply with Google AdSense requirements, GDPR, and CCPA.</p>
-                    
-                    <h3 class="font-semibold text-base text-gray-800 mt-4">1. Data Collection and Non-Storage Policy</h3>
-                    <ul class="list-disc list-inside ml-4 space-y-2">
-                        <li>**User Content (Images):** We adhere to a strict **No-Saving Policy**. Images uploaded by the user and the resulting sticker files are processed *ephemerally* (temporarily) in the browser and via a third-party AI service (Google Gemini API) to generate the requested sticker. Once the sticker is displayed or downloaded, the image data is immediately discarded and **never stored** on our servers or permanent storage.</li>
-                        <li>**Personal Information (PII):** We do not intentionally collect or store any personally identifiable information (PII) such as names, email addresses, or phone numbers.</li>
-                    </ul>
-
-                    <h3 class="font-semibold text-base text-gray-800 mt-4">2. Third-Party Advertising (Google AdSense)</h3>
-                    <p>We use Google AdSense to serve advertisements when you visit our website. Google, as a third-party vendor, uses cookies (DART cookies) to serve ads based on your prior visits to our site and other sites on the Internet. This enables Google and its partners to serve targeted advertisements.</p>
-                    <ul class="list-disc list-inside ml-4 space-y-2">
-                        <li>**Opt-Out:** Users may opt out of personalized advertising by visiting Google's <a href="https://www.google.com/settings/ads" target="_blank" class="text-primary-blue hover:underline">Ads Settings</a>. Alternatively, you can direct users to opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="http://www.aboutads.info/" target="_blank" class="text-primary-blue hover:underline">www.aboutads.info</a>.</li>
-                        <li>**Ad Tracking:** The purpose of collecting data via AdSense cookies is for contextual and targeted advertising, which is the legal basis for processing under this policy.</li>
-                    </ul>
-
-                    <h3 class="font-semibold text-base text-gray-800 mt-4">3. External Links (Sharing)</h3>
-                    <p>The "Share" function utilizes the native Web Share API which may interact with external applications like WhatsApp or Instagram. We are not responsible for the privacy practices of these third-party applications.</p>
-                </div>
-            </section>
-        </footer>
+    <div class="ad-unit h-24 md:h-28 bg-gray-100 rounded-lg flex items-center justify-center mb-6 card border border-gray-200">
+      <strong class="text-gray-500">AD SENSE UNIT 1 (728x90 / Adaptive)</strong>
     </div>
 
-    <!-- MAIN JAVASCRIPT LOGIC -->
-    <script>
-        const canvas = document.getElementById('stickerCanvas');
-        const ctx = canvas.getContext('2d');
-        const fileInput = document.getElementById('fileInput');
-        const generateBtn = document.getElementById('generateBtn');
-        const actionButtons = document.getElementById('actionButtons');
-        const statusMessage = document.getElementById('statusMessage');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const generateIcon = document.getElementById('generateIcon');
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const initialPrompt = document.getElementById('initialPrompt');
-        
-        // Customization Inputs
-        const textInputGroup = document.getElementById('textInputGroup');
-        const emojiInputGroup = document.getElementById('emojiInputGroup');
-        const stickerText = document.getElementById('stickerText');
-        const stickerEmoji = document.getElementById('stickerEmoji');
+    <div class="grid lg:grid-cols-3 gap-8">
+      <!-- Controls -->
+      <div class="lg:col-span-1 card p-6">
+        <h2 class="text-2xl font-semibold mb-4">1 — Upload & Customize</h2>
 
-        let uploadedImageBase64 = null;
-        let originalImage = null; // Store the original Image object for canvas operations
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select an Image (PNG/JPG/WEBP)</label>
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" class="w-full text-sm p-2 mb-2 rounded-lg border border-gray-300" />
+        <p id="fileNameDisplay" class="text-xs text-gray-500 italic mb-3">No file selected.</p>
 
-        // ----------------------------------------------------
-        // API CONFIGURATION (MANDATORY)
-        // ----------------------------------------------------
-        const apiKey = ""; // Leave as-is. Canvas will provide it at runtime.
-        const MODEL_NAME = "gemini-2.5-flash-image-preview";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+        <div class="mb-3">
+          <label class="text-sm font-medium text-gray-700">Sticker Type</label>
+          <div class="flex gap-2 mt-2">
+            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="cartoon" checked onchange="updateControls()" /> <span>✨ AI Cartoon</span></label>
+            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="text" onchange="updateControls()" /> <span>💬 Text</span></label>
+            <label class="flex items-center gap-2 p-2 bg-gray-100 rounded-lg cursor-pointer"><input name="stickerType" type="radio" value="emoji" onchange="updateControls()" /> <span>😂 Emoji</span></label>
+          </div>
+        </div>
 
-        // Utility: Exponential Backoff for Robust API Calls
-        async function fetchWithExponentialBackoff(url, options, maxRetries = 5) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.status !== 429) {
-                        return response;
-                    }
-                    // If 429 (Too Many Requests), wait and retry
-                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                    console.warn(`Rate limit hit (429). Retrying in ${delay / 1000}s...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                } catch (error) {
-                    console.error("Fetch error, retrying:", error);
-                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-            throw new Error("API request failed after multiple retries.");
+        <div id="customizationSection" class="space-y-3 mb-4">
+          <div id="textInputGroup" class="hidden">
+            <label class="text-sm font-medium">Sticker Text (max 20 char)</label>
+            <input id="stickerText" maxlength="20" class="w-full p-2 border rounded-lg" placeholder="E.g., HELLO!" />
+            <label class="text-xs text-gray-500 mt-1">Short uppercase text works best.</label>
+          </div>
+
+          <div id="emojiInputGroup" class="hidden">
+            <label class="text-sm font-medium">Emoji</label>
+            <input id="stickerEmoji" maxlength="2" class="w-full p-2 border rounded-lg" placeholder="🔥 or 😊" />
+          </div>
+
+          <div>
+            <label class="text-sm font-medium">Scale</label>
+            <input id="scaleRange" type="range" min="0.6" max="1.4" step="0.01" value="1" class="w-full" />
+            <div class="flex items-center gap-3 text-xs text-gray-600 mt-1">
+              <label class="flex items-center gap-2"><input id="outlineToggle" type="checkbox" /> Outline</label>
+              <label class="flex items-center gap-2 text-xs">Thickness <input id="outlineThickness" type="range" min="0" max="24" value="12" class="w-24" /></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <button id="generateBtn" onclick="prepareAndGenerate()" class="w-full py-3 font-bold bg-primary-blue text-white rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
+            <svg id="generateIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <svg id="loadingSpinner" class="animate-spin w-5 h-5 hidden" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span id="generateText">Generate Sticker</span>
+          </button>
+          <p id="statusMessage" class="text-center text-sm mt-2 text-gray-600 h-6"></p>
+        </div>
+
+        <div id="actionButtons" class="hidden flex gap-3">
+          <button id="downloadBtn" onclick="downloadSticker()" class="flex-1 py-2 bg-gray-100 rounded-lg">Download PNG</button>
+          <button id="addToPackBtn" onclick="addToPack()" class="flex-1 py-2 bg-yellow-500 text-white rounded-lg">➕ Add to Pack</button>
+          <button id="shareBtn" onclick="shareSticker()" class="flex-1 py-2 bg-green-500 text-white rounded-lg">Share</button>
+        </div>
+
+        <div class="mt-4 space-y-2 text-xs text-gray-600">
+          <div class="flex justify-between"><span>Pack items:</span><strong id="packCount">0</strong></div>
+          <div class="flex gap-2">
+            <button id="downloadPackBtn" onclick="downloadPack()" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg">Download Pack (ZIP)</button>
+            <button onclick="clearPack()" class="py-2 px-3 bg-gray-200 rounded-lg">Clear</button>
+          </div>
+          <div class="text-xxs text-gray-500 mt-2">Tip: App runs locally if no API key is configured. Add your Gemini key to use server AI.</div>
+        </div>
+      </div>
+
+      <!-- Preview + Ads -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="card p-4 preview-box">
+          <div class="flex items-center justify-between mb-3 px-2">
+            <h3 class="text-lg font-semibold">2 — Sticker Preview</h3>
+            <div class="text-sm text-gray-500">Canvas: 512×512 (export)</div>
+          </div>
+
+          <div class="relative h-full flex items-center justify-center bg-gray-100 rounded-xl p-3">
+            <canvas id="stickerCanvas" width="512" height="512" class="shadow-inner"></canvas>
+            <div id="initialPrompt" class="absolute text-center text-gray-500 pointer-events-none">
+              <svg class="w-14 h-14 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <p>Upload a photo and click <strong>Generate Sticker</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ad-unit h-44 bg-gray-100 rounded-xl flex items-center justify-center card border border-gray-200">
+          <strong class="text-gray-500">AD SENSE UNIT 2 (336x280 / Native)</strong>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-8 p-4 card">
+      <div class="flex justify-between items-center">
+        <div>
+          <h4 class="font-semibold">Privacy</h4>
+          <p class="text-sm text-gray-600">Images are processed client-side when possible. If server AI is used, do not store images — remove API key for fully client-side flow.</p>
+        </div>
+        <div class="text-sm text-gray-500">Last updated: Nov 29, 2025</div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+  /********** Main Script: StickerGen AI (complete) **********/
+  // Elements
+  const canvas = document.getElementById('stickerCanvas');
+  const ctx = canvas.getContext('2d');
+  const fileInput = document.getElementById('fileInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const actionButtons = document.getElementById('actionButtons');
+  const statusMessage = document.getElementById('statusMessage');
+  const loadingSpinner = document.getElementById('loadingSpinner');
+  const generateIcon = document.getElementById('generateIcon');
+  const generateText = document.getElementById('generateText');
+  const initialPrompt = document.getElementById('initialPrompt');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+  // Controls
+  const textInputGroup = document.getElementById('textInputGroup');
+  const emojiInputGroup = document.getElementById('emojiInputGroup');
+  const stickerText = document.getElementById('stickerText');
+  const stickerEmoji = document.getElementById('stickerEmoji');
+  const scaleRange = document.getElementById('scaleRange');
+  const outlineToggle = document.getElementById('outlineToggle');
+  const outlineThickness = document.getElementById('outlineThickness');
+  const packCountEl = document.getElementById('packCount');
+
+  // State
+  let uploadedImageBase64 = null;
+  let originalImage = null;
+  let pack = [];
+  let lastGeneratedDataUrl = null;
+
+  // API (put your key here to enable server AI)
+  const apiKey = ""; // <-- Add your Gemini key here (optional)
+  const MODEL_NAME = "gemini-2.5-flash-image-preview";
+  const API_URL = apiKey ? `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}` : null;
+
+  // Helpers
+  function showStatus(text, isError=false) {
+    statusMessage.textContent = text || "";
+    statusMessage.classList.toggle('text-red-600', !!isError);
+  }
+  function setProcessingState(isProcessing) {
+    generateBtn.disabled = isProcessing || !uploadedImageBase64;
+    loadingSpinner.classList.toggle('hidden', !isProcessing);
+    generateIcon.classList.toggle('hidden', isProcessing);
+    generateText.textContent = isProcessing ? 'Processing...' : 'Generate Sticker';
+    if (isProcessing) showStatus('Processing image...'); else if (!isProcessing) showStatus('');
+  }
+  function isSupportedImageType(type) {
+    return /^image\/(png|jpeg|webp)$/i.test(type);
+  }
+  function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read error'));
+      reader.onload = () => {
+        const res = reader.result;
+        const c = res.indexOf(',');
+        resolve({ data: res.slice(c+1), mimeType: file.type || 'image/png' });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function computeFitRect(imgW, imgH, canvasW, canvasH, scale=1) {
+    const ratio = Math.min((canvasW / imgW) * scale, (canvasH / imgH) * scale);
+    const dw = imgW * ratio, dh = imgH * ratio;
+    const dx = (canvasW - dw) / 2, dy = (canvasH - dh) / 2;
+    return {dx,dy,dw,dh,ratio};
+  }
+  function drawCheckerboard(ctx, size=16) {
+    const w = ctx.canvas.width, h = ctx.canvas.height;
+    for (let y=0;y<h;y+=size) {
+      for (let x=0;x<w;x+=size) {
+        ctx.fillStyle = ((Math.floor(x/size)+Math.floor(y/size))%2===0) ? '#e6edf3' : '#ffffff';
+        ctx.fillRect(x,y,size,size);
+      }
+    }
+  }
+
+  // Drawing
+  function drawPreview(img) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawCheckerboard(ctx);
+    const scale = parseFloat(scaleRange.value) || 1;
+    const fit = computeFitRect(img.width, img.height, canvas.width, canvas.height, scale);
+    ctx.drawImage(img, fit.dx, fit.dy, fit.dw, fit.dh);
+
+    // Outline if enabled (visual only)
+    if (outlineToggle.checked) {
+      ctx.save();
+      ctx.lineWidth = parseInt(outlineThickness.value || 12, 10);
+      ctx.strokeStyle = 'white';
+      // draw rounded rect stroke around fitted image area
+      roundRectStroke(ctx, fit.dx - ctx.lineWidth/2, fit.dy - ctx.lineWidth/2, fit.dw + ctx.lineWidth, fit.dh + ctx.lineWidth, 24);
+      ctx.restore();
+    }
+  }
+
+  function roundRectStroke(ctx, x, y, w, h, r=12) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  function drawOverlay(type) {
+    if (!originalImage) return;
+    drawPreview(originalImage);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (type === 'text') {
+      const text = (stickerText.value || '').trim();
+      if (!text) return;
+      ctx.font = 'bold 60px Inter, sans-serif';
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = 'black';
+      ctx.fillStyle = 'white';
+      ctx.strokeText(text.toUpperCase(), canvas.width/2, canvas.height * 0.88);
+      ctx.fillText(text.toUpperCase(), canvas.width/2, canvas.height * 0.88);
+    } else if (type === 'emoji') {
+      const e = (stickerEmoji.value || '').trim();
+      if (!e) return;
+      ctx.font = '110px Inter, sans-serif';
+      ctx.fillText(e, canvas.width * 0.82, canvas.height * 0.16);
+    }
+  }
+
+  // Local cartoonify fallback (posterize + edges)
+  function posterizeCanvasFromImage(img, levels = 6) {
+    const tmp = document.createElement('canvas');
+    tmp.width = 512; tmp.height = 512;
+    const tctx = tmp.getContext('2d');
+    tctx.drawImage(img, 0, 0, tmp.width, tmp.height);
+    const id = tctx.getImageData(0,0,tmp.width,tmp.height);
+    for (let i=0;i<id.data.length;i+=4) {
+      for (let c=0;c<3;c++){
+        const v = id.data[i+c];
+        const q = Math.floor((v/255)*(levels-1)) * (255/(levels-1));
+        id.data[i+c] = q;
+      }
+    }
+    tctx.putImageData(id,0,0);
+    return tmp;
+  }
+  function edgeDetectCanvas(srcCanvas) {
+    const w = srcCanvas.width, h = srcCanvas.height;
+    const sctx = srcCanvas.getContext('2d');
+    const src = sctx.getImageData(0,0,w,h);
+    const out = sctx.createImageData(w,h);
+    for (let y=1;y<h-1;y++) {
+      for (let x=1;x<w-1;x++) {
+        let sum = 0;
+        for (let ky=-1;ky<=1;ky++) for (let kx=-1;kx<=1;kx++) {
+          const idx = ((y+ky)*w + (x+kx))*4;
+          const gray = (src.data[idx] + src.data[idx+1] + src.data[idx+2]) / 3;
+          sum += gray * ((kx===0 && ky===0) ? -8 : 1);
         }
+        const oidx = (y*w + x)*4;
+        const val = Math.max(0, Math.min(255, Math.abs(sum)));
+        out.data[oidx] = out.data[oidx+1] = out.data[oidx+2] = 255 - val;
+        out.data[oidx+3] = 255;
+      }
+    }
+    const eCanvas = document.createElement('canvas');
+    eCanvas.width = w; eCanvas.height = h;
+    eCanvas.getContext('2d').putImageData(out, 0, 0);
+    return eCanvas;
+  }
 
-        // Utility: Converts File object to Base64 String
-        function convertToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]); // Only data part
-                reader.onerror = error => reject(error);
-            });
-        }
+  async function inBrowserCartoonify(img) {
+    showStatus('Running local cartoonify (fallback)...');
+    const poster = posterizeCanvasFromImage(img, 6);
+    const edges = edgeDetectCanvas(poster);
+    const out = document.createElement('canvas');
+    out.width = 512; out.height = 512;
+    const octx = out.getContext('2d');
+    octx.drawImage(poster, 0, 0, out.width, out.height);
+    octx.globalCompositeOperation = 'multiply';
+    octx.drawImage(edges, 0, 0, out.width, out.height);
+    octx.globalCompositeOperation = 'source-over';
 
-        // ----------------------------------------------------
-        // UI AND FILE HANDLING
-        // ----------------------------------------------------
-        fileInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                fileNameDisplay.textContent = `File loaded: ${file.name}`;
-                uploadedImageBase64 = await convertToBase64(file);
-                
-                // Draw initial image on canvas (as non-sticker preview)
-                const img = new Image();
-                img.onload = () => {
-                    originalImage = img;
-                    drawPreview(img);
-                    initialPrompt.classList.add('hidden');
-                };
-                img.src = event.target.files[0].type.startsWith('image/') ? URL.createObjectURL(file) : '';
-                
-                generateBtn.disabled = false;
-                actionButtons.classList.add('hidden'); // Hide share/download until new sticker is made
-                statusMessage.textContent = "Ready to generate!";
-            } else {
-                fileNameDisplay.textContent = "No file selected.";
-                uploadedImageBase64 = null;
-                generateBtn.disabled = true;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                initialPrompt.classList.remove('hidden');
-            }
-        });
+    // make background transparent by sampling corners
+    const id = octx.getImageData(0,0,out.width,out.height);
+    function sample(x,y){ const idx=(y*out.width+x)*4; return [id.data[idx],id.data[idx+1],id.data[idx+2]]; }
+    const c1 = sample(2,2), c2 = sample(out.width-3,2), c3 = sample(2,out.height-3), c4 = sample(out.width-3,out.height-3);
+    const bg = [(c1[0]+c2[0]+c3[0]+c4[0])/4, (c1[1]+c2[1]+c3[1]+c4[1])/4, (c1[2]+c2[2]+c3[2]+c4[2])/4];
+    for (let i=0;i<id.data.length;i+=4){
+      const dr = id.data[i]-bg[0], dg = id.data[i+1]-bg[1], db = id.data[i+2]-bg[2];
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      if (dist < 90) id.data[i+3] = 0;
+    }
+    octx.putImageData(id,0,0);
+    return out;
+  }
 
-        // Toggles visibility of text/emoji inputs based on radio selection
-        function updateControls() {
-            const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
-            textInputGroup.classList.add('hidden');
-            emojiInputGroup.classList.add('hidden');
+  // Fetch with backoff
+  async function fetchWithExponentialBackoff(url, options, maxRetries = 4) {
+    for (let i=0;i<maxRetries;i++) {
+      try {
+        const r = await fetch(url, options);
+        if (r.status === 429) { await new Promise(res => setTimeout(res, Math.pow(2,i)*1000 + Math.random()*300)); continue; }
+        return r;
+      } catch (e) { await new Promise(res => setTimeout(res, Math.pow(2,i)*500)); }
+    }
+    throw new Error('Network error after retries');
+  }
 
-            if (selectedType === 'text') {
-                textInputGroup.classList.remove('hidden');
-            } else if (selectedType === 'emoji') {
-                emojiInputGroup.classList.remove('hidden');
-            }
-        }
-        // Initial control setup
-        updateControls();
-        generateBtn.disabled = true; // Disable until a file is loaded
+  // Generate logic
+  async function prepareAndGenerate() {
+    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+    actionButtons.classList.add('hidden');
+    if (!uploadedImageBase64) { showStatus('Please upload an image first.', true); return; }
+    if (selectedType === 'cartoon') {
+      await generateAISticker();
+    } else {
+      const val = selectedType === 'text' ? (stickerText.value||'').trim() : (stickerEmoji.value||'').trim();
+      if (!val) { showStatus(`Please enter the ${selectedType} before generating.`, true); return; }
+      drawOverlay(selectedType);
+      actionButtons.classList.remove('hidden');
+      showStatus('Sticker generated!');
+    }
+  }
 
-        function setProcessingState(isProcessing) {
-            generateBtn.disabled = isProcessing || !uploadedImageBase64;
-            loadingSpinner.classList.toggle('hidden', !isProcessing);
-            generateIcon.classList.toggle('hidden', isProcessing);
-            if (isProcessing) {
-                statusMessage.textContent = "Processing image with AI...";
-            } else {
-                statusMessage.textContent = "";
-            }
-        }
-        
-        // ----------------------------------------------------
-        // CANVAS DRAWING LOGIC
-        // ----------------------------------------------------
+  async function generateAISticker() {
+    setProcessingState(true);
 
-        // Draws the checkerboard background pattern
-        function drawCheckerboard(ctx, size = 16) {
-            const width = ctx.canvas.width;
-            const height = ctx.canvas.height;
-            for (let y = 0; y < height; y += size) {
-                for (let x = 0; x < width; x += size) {
-                    // Alternate colors
-                    if ((Math.floor(x / size) + Math.floor(y / size)) % 2 === 0) {
-                        ctx.fillStyle = '#ccc';
-                    } else {
-                        ctx.fillStyle = '#fff';
-                    }
-                    ctx.fillRect(x, y, size, size);
-                }
-            }
-        }
+    // If no server key, run local fallback
+    if (!API_URL) {
+      try {
+        const fallbackCanvas = await inBrowserCartoonify(originalImage);
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = fallbackCanvas.toDataURL('image/png'); });
+        originalImage = img;
+        drawPreview(originalImage);
+        actionButtons.classList.remove('hidden');
+        showStatus('✨ Cartoon sticker ready (local).');
+      } catch (err) {
+        console.error('Local cartoonify failed', err);
+        showStatus('Local cartoonify failed.', true);
+      } finally { setProcessingState(false); }
+      return;
+    }
 
-        // Draws the image onto the canvas, centered and fitting
-        function drawPreview(img) {
-            drawCheckerboard(ctx); // Draw checkerboard first
-            
-            const canvasSize = canvas.width;
-            let ratio = Math.min(canvasSize / img.width, canvasSize / img.height);
-            let newWidth = img.width * ratio;
-            let newHeight = img.height * ratio;
-            let x = (canvasSize - newWidth) / 2;
-            let y = (canvasSize - newHeight) / 2;
-            
-            ctx.drawImage(img, x, y, newWidth, newHeight);
-        }
+    // Server path
+    const prompt = "Convert subject into vibrant cartoon sticker. Remove background. Output transparent PNG 512x512.";
+    const payload = {
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: fileInput.dataset.mimeType || 'image/png', data: uploadedImageBase64 } }
+        ]
+      }],
+      generationConfig: { responseModalities: ['IMAGE'] }
+    };
 
-        // Draws text and emoji over the current canvas content
-        function drawOverlay(type) {
-            // Re-draw the original image (or the AI result) first
-            if (!originalImage) return;
+    try {
+      showStatus('Sending image to AI server...');
+      const response = await fetchWithExponentialBackoff(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      }, 4);
 
-            // Clear the canvas and redraw the background
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawCheckerboard(ctx);
-            
-            // Draw original image, full size for sticker feel
-            ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+      const json = await response.json();
+      const base64Data = json?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+      if (!base64Data) {
+        showStatus('AI returned no image. Running local fallback.', true);
+        const fallback = await inBrowserCartoonify(originalImage);
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = fallback.toDataURL('image/png'); });
+        originalImage = img;
+        drawPreview(originalImage);
+        actionButtons.classList.remove('hidden');
+        setProcessingState(false);
+        return;
+      }
 
-            // Add white circular/rounded border effect
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 15;
-            ctx.lineJoin = 'round';
-            ctx.strokeRect(0, 0, canvas.width, canvas.height);
-            ctx.lineWidth = 5;
-            ctx.strokeStyle = '#00000033'; // light shadow border
-            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+      const imageUrl = `data:image/png;base64,${base64Data}`;
+      const aiImg = new Image();
+      await new Promise((res, rej) => { aiImg.onload = res; aiImg.onerror = rej; aiImg.src = imageUrl; });
+      originalImage = aiImg;
+      drawPreview(originalImage);
+      actionButtons.classList.remove('hidden');
+      showStatus('✨ Cartoon sticker ready!');
+    } catch (err) {
+      console.error('AI error', err);
+      showStatus('AI call failed — running local fallback.', true);
+      const fallback = await inBrowserCartoonify(originalImage);
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = fallback.toDataURL('image/png'); });
+      originalImage = img;
+      drawPreview(originalImage);
+      actionButtons.classList.remove('hidden');
+    } finally {
+      setProcessingState(false);
+    }
+  }
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            if (type === 'text') {
-                const text = stickerText.value.trim().toUpperCase();
-                if (text) {
-                    ctx.font = 'bold 80px Inter, sans-serif';
-                    ctx.fillStyle = 'white';
-                    ctx.strokeStyle = 'black';
-                    ctx.lineWidth = 10;
-                    
-                    // Draw text shadow/outline
-                    ctx.strokeText(text, canvas.width / 2, canvas.height * 0.9);
-                    // Draw text fill
-                    ctx.fillText(text, canvas.width / 2, canvas.height * 0.9);
-                }
-            } else if (type === 'emoji') {
-                const emoji = stickerEmoji.value.trim();
-                if (emoji) {
-                    ctx.font = '120px Inter, sans-serif';
-                    // Draw the emoji in the top corner
-                    ctx.fillText(emoji, canvas.width * 0.85, canvas.height * 0.15);
-                }
-            }
-        }
-        
-        // ----------------------------------------------------
-        // GENERATION & API CALLS
-        // ----------------------------------------------------
+  // Compose export canvas (512x512) and return it
+  function buildExportCanvas() {
+    const tmp = document.createElement('canvas');
+    tmp.width = 512; tmp.height = 512;
+    const tctx = tmp.getContext('2d');
+    tctx.clearRect(0,0,tmp.width,tmp.height);
+    if (originalImage) {
+      const fit = computeFitRect(originalImage.width, originalImage.height, tmp.width, tmp.height, parseFloat(scaleRange.value) || 1);
+      tctx.drawImage(originalImage, fit.dx, fit.dy, fit.dw, fit.dh);
+    }
+    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+    if (selectedType === 'text' && stickerText.value.trim()) {
+      tctx.font = 'bold 60px Inter, sans-serif';
+      tctx.textAlign = 'center';
+      tctx.fillStyle = 'white';
+      tctx.strokeStyle = 'black';
+      tctx.lineWidth = 8;
+      tctx.strokeText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height * 0.88);
+      tctx.fillText(stickerText.value.toUpperCase(), tmp.width/2, tmp.height * 0.88);
+    } else if (selectedType === 'emoji' && stickerEmoji.value.trim()) {
+      tctx.font = '110px Inter, sans-serif';
+      tctx.fillText(stickerEmoji.value.trim(), tmp.width * 0.82, tmp.height * 0.16);
+    }
+    return tmp;
+  }
 
-        async function prepareAndGenerate() {
-            const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
-            actionButtons.classList.add('hidden'); // Hide buttons while generating
+  function downloadSticker() {
+    const out = buildExportCanvas();
+    out.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ai-sticker.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showStatus('Download complete!');
+    }, 'image/png');
+  }
 
-            if (!uploadedImageBase64) {
-                statusMessage.textContent = "Please upload an image first!";
-                return;
-            }
+  async function shareSticker() {
+    try {
+      const out = buildExportCanvas();
+      const blob = await new Promise(res => out.toBlob(res, 'image/png'));
+      const file = new File([blob], 'ai-sticker.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'StickerGen AI', text: 'Check my sticker!' });
+        showStatus('Shared successfully!');
+      } else {
+        showStatus('Sharing not supported on this device — downloading instead.');
+        downloadSticker();
+      }
+    } catch (err) {
+      console.error('Share error', err);
+      showStatus('Sharing failed — download will start.', true);
+      downloadSticker();
+    }
+  }
 
-            if (selectedType === 'cartoon') {
-                await generateAISticker();
-            } else if (selectedType === 'text' || selectedType === 'emoji') {
-                // For text/emoji, we only need the base image to draw on
-                // We'll rely on the existing originalImage object and client-side drawOverlay
-                if (originalImage) {
-                    drawOverlay(selectedType);
-                    statusMessage.textContent = "Sticker generated!";
-                    actionButtons.classList.remove('hidden');
-                } else {
-                    statusMessage.textContent = "Error: Original image data missing.";
-                }
-            }
-        }
+  // Pack features (JSZip)
+  async function addToPack() {
+    const out = buildExportCanvas();
+    const blob = await new Promise(res => out.toBlob(res, 'image/png'));
+    pack.push(blob);
+    packCountEl.textContent = pack.length;
+    showStatus('Added to pack.');
+  }
+  function clearPack() {
+    pack = [];
+    packCountEl.textContent = 0;
+    showStatus('Pack cleared.');
+  }
+  async function downloadPack() {
+    if (!pack.length) { showStatus('Pack empty.', true); return; }
+    showStatus('Preparing pack ZIP...');
+    const zip = new JSZip();
+    pack.forEach((b, i) => zip.file(`sticker_${i+1}.png`, b));
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sticker-pack.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showStatus('Pack downloaded!');
+  }
 
-        async function generateAISticker() {
-            setProcessingState(true);
-            
-            const prompt = "Convert the subject of this photo into a vibrant, high-quality cartoon style sticker. The background must be completely removed, resulting in a transparent PNG. The subject should be styled as a cool, shareable sticker. The final image size must be 512x512 with a transparent background.";
-            
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: fileInput.files[0].type,
-                                data: uploadedImageBase64
-                            }
-                        }
-                    ]
-                }],
-                generationConfig: {
-                    responseModalities: ['TEXT', 'IMAGE']
-                },
-            };
+  // File input handling
+  fileInput.addEventListener('change', async (e) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) { fileNameDisplay.textContent = 'No file selected.'; uploadedImageBase64 = null; generateBtn.disabled = true; ctx.clearRect(0,0,canvas.width,canvas.height); initialPrompt.classList.remove('hidden'); return; }
+      if (!isSupportedImageType(file.type)) { fileNameDisplay.textContent = 'Error: Only JPG, PNG, WEBP supported.'; uploadedImageBase64 = null; generateBtn.disabled = true; ctx.clearRect(0,0,canvas.width,canvas.height); initialPrompt.classList.remove('hidden'); return; }
+      fileNameDisplay.textContent = `File loaded: ${file.name}`;
+      const {data, mimeType} = await convertToBase64(file);
+      uploadedImageBase64 = data;
+      fileInput.dataset.mimeType = mimeType;
+      const obj = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { originalImage = img; drawPreview(img); URL.revokeObjectURL(obj); generateBtn.disabled = false; actionButtons.classList.add('hidden'); initialPrompt.classList.add('hidden'); showStatus('Ready to generate!'); };
+      img.onerror = () => { showStatus('Error loading image.', true); URL.revokeObjectURL(obj); };
+      img.src = obj;
+    } catch (err) {
+      console.error(err);
+      showStatus('Failed to read file.', true);
+    }
+  });
 
-            try {
-                const response = await fetchWithExponentialBackoff(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+  // Controls toggle
+  function updateControls() {
+    const selectedType = document.querySelector('input[name="stickerType"]:checked').value;
+    textInputGroup.classList.toggle('hidden', selectedType !== 'text');
+    emojiInputGroup.classList.toggle('hidden', selectedType !== 'emoji');
+    if (originalImage) { drawPreview(originalImage); actionButtons.classList.add('hidden'); }
+  }
+  updateControls();
+  generateBtn.disabled = true;
 
-                const result = await response.json();
-                
-                const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-
-                if (!base64Data) {
-                    const errorReason = result?.candidates?.[0]?.finishReason || 'Unknown error. Check the prompt or image.';
-                    statusMessage.textContent = `AI generation failed: ${errorReason}`;
-                    return;
-                }
-
-                const imageUrl = `data:image/png;base64,${base64Data}`;
-                
-                const img = new Image();
-                img.onload = () => {
-                    originalImage = img; // Update originalImage with the new AI generated sticker
-                    drawPreview(img);
-                    statusMessage.textContent = "✨ Cartoon Sticker Ready! Share or Download!";
-                    actionButtons.classList.remove('hidden');
-                };
-                img.onerror = () => {
-                    statusMessage.textContent = "Error loading generated image.";
-                };
-                img.src = imageUrl;
-
-            } catch (error) {
-                console.error("Gemini API error:", error);
-                statusMessage.textContent = `Error: API call failed. ${error.message}`;
-            } finally {
-                setProcessingState(false);
-            }
-        }
-
-        // ----------------------------------------------------
-        // EXPORT AND SHARING
-        // ----------------------------------------------------
-
-        // Function to trigger a download
-        function downloadSticker() {
-            // Get the final canvas data as a blob
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ai-sticker.png';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                statusMessage.textContent = "Download complete!";
-            }, 'image/png');
-        }
-
-        // Function to use the Web Share API (Best for WhatsApp/Instagram sharing)
-        async function shareSticker() {
-            if (navigator.share && navigator.canShare) {
-                try {
-                    // Convert canvas to Blob
-                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                    const file = new File([blob], "ai-sticker.png", { type: "image/png" });
-                    
-                    if (navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: 'My AI Sticker',
-                            text: 'Check out this awesome sticker I made with StickerGen AI!',
-                        });
-                        statusMessage.textContent = "Sticker shared successfully!";
-                    } else {
-                        statusMessage.textContent = "Cannot share files on this device/browser. Please download manually.";
-                        downloadSticker(); // Fallback to download
-                    }
-                } catch (error) {
-                    if (error.name !== 'AbortError') {
-                        console.error('Error sharing:', error);
-                        statusMessage.textContent = "Sharing failed. Please try downloading.";
-                        downloadSticker(); // Fallback to download on error
-                    }
-                }
-            } else {
-                // Fallback for browsers that don't support Web Share API
-                statusMessage.textContent = "Native sharing not supported. Initiating download...";
-                downloadSticker();
-            }
-        }
-    </script>
+  // expose some functions globally used by onclick attributes
+  window.prepareAndGenerate = prepareAndGenerate;
+  window.downloadSticker = downloadSticker;
+  window.shareSticker = shareSticker;
+  window.addToPack = addToPack;
+  window.clearPack = clearPack;
+  window.downloadPack = downloadPack;
+  window.updateControls = updateControls;
+  </script>
 </body>
 </html>
